@@ -10,6 +10,7 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
+  Lightbulb,
 } from "lucide-react";
 
 export type Market =
@@ -115,9 +116,13 @@ const TECH_STACKS: TechStack[] = [
 
 interface RouletteWheelProps {
   onResult?: (combination: Combination) => void;
+  onGenerateIdeas?: (combination: Combination) => void;
 }
 
-export default function RouletteWheel({ onResult }: RouletteWheelProps) {
+export default function RouletteWheel({
+  onResult,
+  onGenerateIdeas,
+}: RouletteWheelProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<Combination | null>(null);
   const [columnPositions, setColumnPositions] = useState<number[]>([
@@ -394,7 +399,19 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            {/* Generate Ideas Button - Primary CTA */}
+            <div className="mt-6">
+              <button
+                onClick={() => onGenerateIdeas?.(result)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-emerald-500/25"
+              >
+                <Lightbulb size={18} />
+                Generate Ideas with AI
+              </button>
+            </div>
+
+            {/* Secondary Actions */}
+            <div className="flex gap-3 mt-4">
               <button
                 onClick={() =>
                   navigator.share?.({
