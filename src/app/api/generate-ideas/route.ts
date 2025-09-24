@@ -67,6 +67,7 @@ const RequestSchema = z.object({
     userType: z.string(),
     problemType: z.string(),
     techStack: z.string(),
+    projectScope: z.string(),
   }),
   apiKey: z.string().min(1, "API key is required"),
 });
@@ -88,16 +89,24 @@ export async function POST(request: NextRequest) {
 
     const optimizedPrompt = `You are a product idea generator with web search capabilities. Generate 3 unique, feasible product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
 
+PROJECT SCOPE: ${combination.projectScope}
+This is crucial - all ideas must be appropriately scoped for a ${combination.projectScope.toLowerCase()}:
+- Weekend Project: Simple MVP, 1-2 core features, minimal setup
+- 1 Week Sprint: Basic app with 2-3 key features, simple architecture
+- 1 Month Build: Feature-rich application with good UX/UI, proper architecture
+- 3 Month Project: Complex application with advanced features, integrations, scalability considerations
+- 6 Month Journey: Enterprise-grade solution with comprehensive features, testing, documentation, deployment
+
 TASK: Use web search to quickly identify 2-3 current pain points for ${combination.userType} in ${combination.market}, then generate ideas that address these problems.
 
 Requirements for each idea:
 - Name: Catchy, memorable product name
-- Description: 1-2 sentences addressing researched problems
-- Core Features: 3-5 specific features solving real problems
-- Tech Stack: 3-5 technologies (must include ${combination.techStack})
-- Marketing: 3-4 lead generation strategies
+- Description: 1-2 sentences addressing researched problems AND appropriate for the ${combination.projectScope.toLowerCase()} timeline
+- Core Features: 3-5 specific features scoped appropriately for ${combination.projectScope.toLowerCase()}
+- Tech Stack: 3-5 technologies (must include ${combination.techStack}) suitable for the project scope
+- Marketing: 3-4 lead generation strategies realistic for an indie developer in this timeframe
 
-Make ideas unique, feasible for solo developers, based on real market research.
+Make ideas unique, feasible for solo developers, properly scoped for ${combination.projectScope.toLowerCase()}, based on real market research.
 
 Return ONLY valid JSON matching this exact structure:
 {

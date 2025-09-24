@@ -44,11 +44,19 @@ export type TechStack =
   | "API/MCP"
   | "Slack/Discord Bot";
 
+export type ProjectScope =
+  | "Weekend Project"
+  | "1 Week Sprint"
+  | "1 Month Build"
+  | "3 Month Project"
+  | "6 Month Journey";
+
 export type Combination = {
   market: Market;
   userType: UserType;
   problemType: ProblemType;
   techStack: TechStack;
+  projectScope: ProjectScope;
 };
 
 // AI Generated Idea structure based on PRD

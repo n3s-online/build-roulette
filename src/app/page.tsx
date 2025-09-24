@@ -1,30 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import RouletteWheel from "@/components/roulette-wheel";
+import SlotMachine from "@/components/slot-machine";
 import SettingsDialog from "@/components/settings-dialog";
 import IdeasDisplay from "@/components/ideas-display";
 import FakeLoadingBar from "@/components/fake-loading-bar";
-import { Combination, GeneratedIdea, IdeaGenerationError } from "@/lib/types";
-import { createAIService } from "@/lib/ai-service";
+import { Combination } from "@/lib/types";
+import { useGenerateIdeas } from "@/hooks/use-generate-ideas";
 import { getStoredApiKey } from "@/lib/utils";
 
 export default function Home() {
-  const [currentCombination, setCurrentCombination] =
-    useState<Combination | null>(null);
-  const [generatedIdeas, setGeneratedIdeas] = useState<GeneratedIdea[] | null>(
-    null
-  );
-  const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [currentCombination, setCurrentCombination] = useState<Combination | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
+  const generateIdeasMutation = useGenerateIdeas();
+
   const handleSpinResult = (combination: Combination) => {
     setCurrentCombination(combination);
-    setGeneratedIdeas(null); // Clear previous ideas
-    setGenerationError(null);
-    setIsGeneratingIdeas(false); // Stop any loading state
+    generateIdeasMutation.reset(); // Clear previous ideas/errors
   };
 
   const handleGenerateIdeas = async (combination: Combination) => {
@@ -35,24 +29,17 @@ export default function Home() {
       return;
     }
 
-    setIsGeneratingIdeas(true);
-    setGenerationError(null);
-
-    try {
-      const aiService = createAIService(apiKey);
-      const response = await aiService.generateIdeas(combination);
-      setGeneratedIdeas(response.ideas);
-    } catch (error) {
-      const aiError = error as IdeaGenerationError;
-      setGenerationError(aiError.message);
-
-      // If it's an API key error, show settings dialog
-      if (aiError.code === "INVALID_API_KEY") {
-        setShowSettingsDialog(true);
+    generateIdeasMutation.mutate(
+      { combination, apiKey },
+      {
+        onError: (error) => {
+          // If it's an API key error, show settings dialog
+          if (error?.code === "INVALID_API_KEY") {
+            setShowSettingsDialog(true);
+          }
+        },
       }
-    } finally {
-      setIsGeneratingIdeas(false);
-    }
+    );
   };
 
   const handleApiKeyChange = (hasKey: boolean) => {
@@ -64,8 +51,7 @@ export default function Home() {
 
   const handleSpinAgain = () => {
     setCurrentCombination(null);
-    setGeneratedIdeas(null);
-    setGenerationError(null);
+    generateIdeasMutation.reset();
   };
 
   return (
@@ -96,24 +82,24 @@ export default function Home() {
 
           {/* Slot Machine */}
           <div>
-            <RouletteWheel
+            <SlotMachine
               onResult={handleSpinResult}
               onGenerateIdeas={handleGenerateIdeas}
             />
           </div>
 
           {/* Loading State for AI Generation */}
-          <FakeLoadingBar isLoading={isGeneratingIdeas} />
+          <FakeLoadingBar isLoading={generateIdeasMutation.isPending} />
 
           {/* Error State */}
-          {generationError && !isGeneratingIdeas && (
+          {generateIdeasMutation.error && !generateIdeasMutation.isPending && (
             <div className="max-w-lg w-full mx-auto mt-8">
               <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
                 <div className="text-center">
                   <p className="text-red-400 font-medium mb-2">
                     Generation Failed
                   </p>
-                  <p className="text-red-300 text-sm mb-4">{generationError}</p>
+                  <p className="text-red-300 text-sm mb-4">{generateIdeasMutation.error.message}</p>
                   <button
                     onClick={() =>
                       currentCombination &&
@@ -129,10 +115,10 @@ export default function Home() {
           )}
 
           {/* Generated Ideas Display */}
-          {generatedIdeas && currentCombination && !isGeneratingIdeas && (
+          {generateIdeasMutation.data && currentCombination && !generateIdeasMutation.isPending && (
             <div className="mt-12">
               <IdeasDisplay
-                ideas={generatedIdeas}
+                ideas={generateIdeasMutation.data.ideas}
                 combination={currentCombination}
                 onSpinAgain={handleSpinAgain}
               />

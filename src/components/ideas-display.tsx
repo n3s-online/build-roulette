@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { 
-  Lightbulb, 
-  Zap, 
-  Code, 
-  TrendingUp, 
-  RotateCcw, 
-  Share,
+import {
+  Lightbulb,
+  Zap,
+  Code,
+  TrendingUp,
+  RotateCcw,
+  Copy,
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
@@ -30,22 +30,30 @@ export default function IdeasDisplay({
     setExpandedIdea(expandedIdea === index ? null : index)
   }
 
-  const shareIdea = (idea: GeneratedIdea) => {
-    const text = `💡 ${idea.name}\n\n${idea.description}\n\nGenerated from: ${combination.market} + ${combination.userType} + ${combination.problemType} + ${combination.techStack}\n\nTry BuildRoulette: ${window.location.origin}`
-    
-    if (navigator.share) {
-      navigator.share({
-        title: `BuildRoulette Idea: ${idea.name}`,
-        text,
-        url: window.location.href,
-      })
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(text).then(() => {
-        // Could add a toast notification here
-        console.log('Idea copied to clipboard!')
-      })
-    }
+  const copyIdea = (idea: GeneratedIdea) => {
+    const text = `💡 ${idea.name}
+
+${idea.description}
+
+🚀 Core Features:
+${idea.coreFeatures.map(feature => `• ${feature}`).join('\n')}
+
+🛠️ Tech Stack:
+${idea.suggestedTechStack.map(tech => `• ${tech}`).join('\n')}
+
+📈 Marketing Ideas:
+${idea.leadGenerationIdeas.map(strategy => `• ${strategy}`).join('\n')}
+
+Generated from: ${combination.market} + ${combination.userType} + ${combination.problemType} + ${combination.techStack} (${combination.projectScope})
+
+Try BuildRoulette: ${window.location.origin}`
+
+    navigator.clipboard.writeText(text).then(() => {
+      // Could add a toast notification here
+      console.log('Idea copied to clipboard!')
+    }).catch(err => {
+      console.error('Failed to copy:', err)
+    })
   }
 
   return (
@@ -56,10 +64,11 @@ export default function IdeasDisplay({
           🎯 Your AI-Generated Ideas
         </h2>
         <p className="text-gray-400">
-          Based on: <span className="text-blue-400">{combination.market}</span> + 
-          <span className="text-emerald-400"> {combination.userType}</span> + 
-          <span className="text-amber-400"> {combination.problemType}</span> + 
-          <span className="text-purple-400"> {combination.techStack}</span>
+          Based on: <span className="text-blue-400">{combination.market}</span> +
+          <span className="text-emerald-400"> {combination.userType}</span> +
+          <span className="text-amber-400"> {combination.problemType}</span> +
+          <span className="text-purple-400"> {combination.techStack}</span> +
+          <span className="text-rose-400"> {combination.projectScope}</span>
         </p>
       </div>
 
@@ -154,14 +163,14 @@ export default function IdeasDisplay({
                   </div>
                 </div>
 
-                {/* Share Button for Individual Idea */}
+                {/* Copy Button for Individual Idea */}
                 <div className="mt-6 pt-4 border-t border-gray-800">
                   <button
-                    onClick={() => shareIdea(idea)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    onClick={() => copyIdea(idea)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors hover:bg-emerald-600"
                   >
-                    <Share size={14} />
-                    Share This Idea
+                    <Copy size={14} />
+                    Copy Full Idea
                   </button>
                 </div>
               </div>
