@@ -56,12 +56,14 @@ Solo entrepreneurs and indie hackers frequently face "blank page syndrome" when 
 
 ## Feature Requirements (MVP Only)
 
-### 1. Giant Roulette Wheel System 🎯
-- **Single large roulette wheel** divided into 4 colored sections
-- **Animated spinning mechanics** with realistic physics and momentum
-- **Visual section highlighting** as wheel slows down
-- **"Spin the Wheel" button** with satisfying click feedback
-- **Final selection display** showing one option from each section
+### 1. Slot Machine System 🎰
+- **4-column slot machine interface** with vertical scrolling animations
+- **Staggered stopping mechanism** - columns stop sequentially (1s, 2s, 3s, 4s)
+- **Progressive rotation counts** per column (5, 10, 15, 20 rotations)
+- **Visual selection indicators** showing winning position in each column
+- **"SPIN" button** with satisfying animation feedback
+- **Accurate targeting** - lands precisely on selected values
+- **Continuous scrolling effect** with seamless looping animation
 
 ### 2. Product Dimension Categories (Hardcoded)
 - **Market Section:** SaaS, E-commerce, FinTech, HealthTech, EdTech, Gaming, Creator Economy, Real Estate, Travel, Food & Beverage, Fitness, Productivity
@@ -121,7 +123,7 @@ Solo entrepreneurs and indie hackers frequently face "blank page syndrome" when 
 - **Framework:** Next.js 14+ with App Router
 - **Language:** TypeScript for type safety
 - **Styling:** Tailwind CSS + shadcn/ui components
-- **Animations:** CSS transforms + JavaScript for roulette physics
+- **Animations:** CSS transforms + JavaScript for slot machine mechanics
 - **State Management:** React useState (no external state management needed)
 
 ### Backend Requirements
@@ -173,9 +175,9 @@ type GeneratedIdea = {
   - Basic page layout and responsive design
   - Roulette wheel component creation with 4 sections
 - **Afternoon (4 hours):**
-  - Spinning animation implementation with realistic physics
-  - Section selection logic and result display
-  - Basic combination display
+  - Slot machine animation implementation with staggered stopping
+  - Column selection logic and accurate targeting
+  - Basic combination display with visual indicators
 
 ### Day 2: AI Integration & Results
 - **Morning (4 hours):**
@@ -202,7 +204,7 @@ type GeneratedIdea = {
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
 | LLM API rate limits/costs | Medium | Medium | Implement rate limiting, fallback responses |
-| Roulette animation performance on mobile | Low | Medium | Use CSS transforms, test on devices, optimize animations |
+| Slot machine animation performance on mobile | Low | Medium | Use CSS transforms, test on devices, optimize animations |
 | Social sharing not working | Low | High | Test across platforms, implement fallbacks |
 
 ### Business Risks
@@ -244,4 +246,4 @@ type GeneratedIdea = {
 **Last Updated:** September 22, 2025  
 **Next Review:** Post-launch retrospective  
 
-Ready to spin the wheel and discover your next big idea? 🎯✨
+Ready to spin the slots and discover your next big idea? 🎰✨
