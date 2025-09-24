@@ -4,6 +4,7 @@ import { useState } from "react";
 import RouletteWheel from "@/components/roulette-wheel";
 import SettingsDialog from "@/components/settings-dialog";
 import IdeasDisplay from "@/components/ideas-display";
+import FakeLoadingBar from "@/components/fake-loading-bar";
 import { Combination, GeneratedIdea, IdeaGenerationError } from "@/lib/types";
 import { createAIService } from "@/lib/ai-service";
 import { getStoredApiKey } from "@/lib/utils";
@@ -101,21 +102,7 @@ export default function Home() {
           </div>
 
           {/* Loading State for AI Generation */}
-          {isGeneratingIdeas && (
-            <div className="max-w-lg w-full mx-auto mt-8">
-              <div className="bg-gray-900 rounded-lg p-8 border border-emerald-500/20">
-                <div className="text-center">
-                  <div className="w-12 h-12 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-white font-semibold mb-2">
-                    Generating Ideas...
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    AI is crafting unique product ideas for your combination
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          <FakeLoadingBar isLoading={isGeneratingIdeas} />
 
           {/* Error State */}
           {generationError && !isGeneratingIdeas && (
