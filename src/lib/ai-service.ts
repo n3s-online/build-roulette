@@ -35,7 +35,7 @@ export class AIService {
       });
 
       const content = response.content[0];
-      if (content.type !== "text") {
+      if (!content || content.type !== "text") {
         throw new Error("Unexpected response format from AI");
       }
 
@@ -92,7 +92,17 @@ Respond only with valid JSON, no additional text.`;
   private parseResponse(responseText: string): GeneratedIdea[] {
     try {
       // Clean the response text to ensure it's valid JSON
-      const cleanedText = responseText.trim();
+      let cleanedText = responseText.trim();
+
+      // Remove markdown code blocks if present
+      if (cleanedText.startsWith("```json")) {
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, "")
+          .replace(/\s*```$/, "");
+      } else if (cleanedText.startsWith("```")) {
+        cleanedText = cleanedText.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      }
+
       const parsed = JSON.parse(cleanedText);
 
       if (!parsed.ideas || !Array.isArray(parsed.ideas)) {
