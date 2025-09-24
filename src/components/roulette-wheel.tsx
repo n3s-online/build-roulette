@@ -53,12 +53,9 @@ export type ProblemType =
 export type TechStack =
   | "Web App"
   | "Mobile App"
-  | "Chrome Extension"
-  | "API/Tool"
-  | "Desktop App"
-  | "Slack Bot"
-  | "WordPress Plugin"
-  | "Shopify App";
+  | "Browser Extension"
+  | "API/MCP"
+  | "Slack/Discord Bot";
 
 export type Combination = {
   market: Market;
@@ -111,12 +108,9 @@ const PROBLEM_TYPES: ProblemType[] = [
 const TECH_STACKS: TechStack[] = [
   "Web App",
   "Mobile App",
-  "Chrome Extension",
-  "API/Tool",
-  "Desktop App",
-  "Slack Bot",
-  "WordPress Plugin",
-  "Shopify App",
+  "Browser Extension",
+  "API/MCP",
+  "Slack/Discord Bot",
 ];
 
 interface RouletteWheelProps {
@@ -251,17 +245,42 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
                   : "0ms",
               }}
             >
-              {extendedData.map((item, index) => (
-                <div
-                  key={`${item}-${index}`}
-                  className="h-20 flex items-center justify-center px-3 text-center border-b border-gray-700/50"
-                  style={{ backgroundColor: color }}
-                >
-                  <span className="text-white font-medium text-sm leading-tight">
-                    {item.length > 12 ? item.substring(0, 12) + "..." : item}
-                  </span>
-                </div>
-              ))}
+              {extendedData.map((item, index) => {
+                // Dynamic text sizing based on length
+                const getTextSize = (text: string) => {
+                  if (text.length <= 8) return "text-sm";
+                  if (text.length <= 12) return "text-xs";
+                  if (text.length <= 16) return "text-xs";
+                  return "text-xs";
+                };
+
+                const getLineHeight = (text: string) => {
+                  if (text.length <= 8) return "leading-tight";
+                  if (text.length <= 12) return "leading-tight";
+                  return "leading-tight";
+                };
+
+                return (
+                  <div
+                    key={`${item}-${index}`}
+                    className="h-20 flex items-center justify-center px-2 text-center border-b border-gray-700/50"
+                    style={{ backgroundColor: color }}
+                  >
+                    <span
+                      className={`text-white font-medium ${getTextSize(
+                        item
+                      )} ${getLineHeight(item)}`}
+                      style={{
+                        wordBreak: "break-word",
+                        hyphens: "auto",
+                        lineHeight: item.length > 12 ? "1.2" : "1.3",
+                      }}
+                    >
+                      {item}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -328,7 +347,7 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
       {/* Results Card */}
       {result && !isSpinning && (
         <div className="max-w-lg w-full mx-auto">
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-700 shadow-[0_0_25px_rgba(34,197,94,0.2)] border-emerald-500/20">
+          <div className="bg-gray-900 rounded-lg p-6 border border-emerald-500/20 shadow-[0_0_25px_rgba(34,197,94,0.2)]">
             <h3 className="text-lg font-semibold text-white mb-6 text-center">
               Your Combination
             </h3>
