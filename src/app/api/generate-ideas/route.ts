@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateObject } from "ai";
+import { generateObject, generateText } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 
@@ -54,24 +54,53 @@ export async function POST(request: NextRequest) {
       apiKey: apiKey,
     });
 
-    // Build the prompt
-    const prompt = `You are a product ideation expert helping indie hackers and solo entrepreneurs. Generate exactly 3 unique, actionable product ideas based on this combination:
+    // Step 1: Research the problem space using web search
+    const webSearchTool = anthropic.tools.webSearch_20250305({ maxUses: 5 });
 
-Market: ${combination.market}
-User Type: ${combination.userType}
-Problem Type: ${combination.problemType}
-Tech Stack: ${combination.techStack}
+    const researchPrompt = `Research real problems for ${combination.userType} in ${combination.market} related to ${combination.problemType}. Find:
+1. Top 3 pain points and unmet needs
+2. Existing solutions and gaps
+3. Recent trends and opportunities
 
-For each idea, provide:
-- A catchy, memorable product name
-- Clear description in 1-2 sentences
-- 3-5 specific and concise core features
-- 3-5 technologies for implementation (can include but not limited to the suggested tech stack)
-- 3-4 marketing/lead generation strategies
+Be concise. Focus on validated problems that need solving.`;
 
-Make each idea unique, feasible for a solo developer or small team, and directly address the specified problem type for the target user type in the given market.
+    // Try web search research, fallback to basic generation if rate limited
+    let researchInsights = "";
+    try {
+      console.log("Starting web research for:", combination);
+      const researchResult = await generateText({
+        model: anthropic("claude-sonnet-4-20250514"),
+        prompt: researchPrompt,
+        tools: { web_search: webSearchTool },
+      });
+      console.log("Research completed, generating ideas...");
 
-Focus on practical, implementable solutions that could realistically be built and monetized. Consider current market trends and user needs.
+      // Truncate research if it's too long to avoid rate limits
+      const maxResearchLength = 1500; // Reduced further
+      researchInsights =
+        researchResult.text.length > maxResearchLength
+          ? researchResult.text.substring(0, maxResearchLength) + "..."
+          : researchResult.text;
+    } catch (error) {
+      console.log("Web search failed, proceeding without research:", error);
+      researchInsights =
+        "No web research available due to rate limits. Generate ideas based on general market knowledge.";
+    }
+
+    // Build the prompt with research insights
+    const prompt = `Generate 3 product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}:
+
+RESEARCH:
+${researchInsights}
+
+Based on research, create 3 ideas addressing real problems. Each needs:
+- Name
+- Description (1-2 sentences referencing research problems)
+- 3-5 core features solving researched problems
+- 3-5 technologies (include ${combination.techStack})
+- 3-4 marketing strategies
+
+Make ideas unique, feasible for solo developers, addressing research-validated problems.
 
 Respond only with valid JSON, no additional text.`;
 
