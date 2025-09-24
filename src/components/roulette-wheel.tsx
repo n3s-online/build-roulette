@@ -33,6 +33,7 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<Combination | null>(null);
   const [columnPositions, setColumnPositions] = useState<number[]>([0, 0, 0, 0]);
+  const [columnDurations, setColumnDurations] = useState<number[]>([0, 0, 0, 0]);
 
   const generateRandomResult = useCallback((): Combination => {
     return {
@@ -67,14 +68,20 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
       return positionToCenter + extraSpins;
     });
 
-    setColumnPositions(targetPositions);
+    // Calculate animation durations based on rotation count (200ms per rotation)
+    const baseDuration = 200;
+    const durations = extraRotations.map(rotations => rotations * baseDuration);
 
-    // Show result after animation completes (4 seconds)
+    setColumnPositions(targetPositions);
+    setColumnDurations(durations);
+
+    // Show result after longest animation completes
+    const longestDuration = Math.max(...durations);
     setTimeout(() => {
       setResult(newResult);
       setIsSpinning(false);
       onResult?.(newResult);
-    }, 4000);
+    }, longestDuration + 500);
   }, [isSpinning, generateRandomResult, onResult]);
 
   const renderColumn = (data: readonly string[], columnIndex: number, color: string, label: string) => {
@@ -90,9 +97,10 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
 
           {/* Scrolling items */}
           <div
-            className={`relative ${isSpinning ? 'transition-transform duration-[4000ms] ease-out' : ''}`}
+            className={`relative ${isSpinning ? 'transition-transform ease-out' : ''}`}
             style={{
               transform: `translateY(-${columnPositions[columnIndex]}px)`,
+              transitionDuration: isSpinning ? `${columnDurations[columnIndex]}ms` : '0ms',
             }}
           >
             {extendedData.map((item, index) => (
