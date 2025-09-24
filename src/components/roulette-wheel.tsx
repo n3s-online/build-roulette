@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { Briefcase, Users, Target, Zap, Share, RotateCcw } from 'lucide-react';
 
 export type Market = 'SaaS' | 'E-commerce' | 'FinTech' | 'HealthTech' | 'EdTech' | 'Gaming' | 'Creator Economy' | 'Real Estate' | 'Travel' | 'Food & Beverage' | 'Fitness' | 'Productivity';
 
@@ -84,36 +85,49 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
     }, longestDuration + 500);
   }, [isSpinning, generateRandomResult, onResult]);
 
-  const renderColumn = (data: readonly string[], columnIndex: number, color: string, label: string) => {
-    // Create extended array for continuous scrolling effect - need enough for 20+ rotations
+  const renderColumn = (data: readonly string[], columnIndex: number, color: string, label: string, icon: React.ReactNode) => {
+    // Create extended array for continuous scrolling effect
     const extendedData = Array(25).fill(data).flat();
 
     return (
       <div key={label} className="flex flex-col items-center">
-        <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{label}</h3>
-        <div className="relative w-40 h-80 border-4 border-white rounded-lg shadow-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-          {/* Selection indicator */}
-          <div className="absolute top-[160px] left-0 right-0 transform -translate-y-1/2 h-20 border-t-2 border-b-2 border-yellow-400 bg-yellow-100/50 dark:bg-yellow-900/30 z-10 pointer-events-none"></div>
+        {/* Column Header */}
+        <div className="mb-6 text-center">
+          <div className="mb-2 flex justify-center text-gray-400">{icon}</div>
+          <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">{label}</h3>
+        </div>
 
-          {/* Scrolling items */}
-          <div
-            className={`relative ${isSpinning ? 'transition-transform ease-out' : ''}`}
-            style={{
-              transform: `translateY(-${columnPositions[columnIndex]}px)`,
-              transitionDuration: isSpinning ? `${columnDurations[columnIndex]}ms` : '0ms',
-            }}
-          >
-            {extendedData.map((item, index) => (
-              <div
-                key={`${item}-${index}`}
-                className={`h-20 flex items-center justify-center text-white font-semibold px-2 text-center border-b border-gray-300 dark:border-gray-600`}
-                style={{ backgroundColor: color }}
-              >
-                <span className="text-sm leading-tight">
-                  {item.length > 12 ? item.substring(0, 12) + '...' : item}
-                </span>
-              </div>
-            ))}
+        {/* Clean Slot Column */}
+        <div className="relative">
+          <div className="w-40 h-80 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+
+            {/* Selection indicator */}
+            <div className={`absolute top-[160px] left-0 right-0 transform -translate-y-1/2 h-20 z-10 pointer-events-none transition-all duration-200 ${
+              isSpinning
+                ? 'bg-blue-500/10 border-y border-blue-500/30'
+                : 'bg-white/5 border-y border-gray-600'
+            }`}></div>
+
+            {/* Scrolling items */}
+            <div
+              className={`relative ${isSpinning ? 'transition-transform ease-out' : ''}`}
+              style={{
+                transform: `translateY(-${columnPositions[columnIndex]}px)`,
+                transitionDuration: isSpinning ? `${columnDurations[columnIndex]}ms` : '0ms',
+              }}
+            >
+              {extendedData.map((item, index) => (
+                <div
+                  key={`${item}-${index}`}
+                  className="h-20 flex items-center justify-center px-3 text-center border-b border-gray-700/50"
+                  style={{ backgroundColor: color }}
+                >
+                  <span className="text-white font-medium text-sm leading-tight">
+                    {item.length > 12 ? item.substring(0, 12) + '...' : item}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -122,60 +136,99 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
 
   return (
     <div className="flex flex-col items-center space-y-8">
-      {/* Slot Machine */}
-      <div className="flex gap-6 items-start">
-        {renderColumn(MARKETS, 0, '#8b5cf6', 'Market')}
-        {renderColumn(USER_TYPES, 1, '#3b82f6', 'User Type')}
-        {renderColumn(PROBLEM_TYPES, 2, '#10b981', 'Problem')}
-        {renderColumn(TECH_STACKS, 3, '#f97316', 'Tech Stack')}
+      {/* Clean Slot Machine */}
+      <div className="bg-gray-900/50 rounded-2xl p-8 border border-gray-800">
+        <div className="flex gap-8 items-start justify-center">
+          {renderColumn(MARKETS, 0, 'rgb(59 130 246)', 'Market', <Briefcase size={20} />)}
+          {renderColumn(USER_TYPES, 1, 'rgb(16 185 129)', 'User Type', <Users size={20} />)}
+          {renderColumn(PROBLEM_TYPES, 2, 'rgb(245 158 11)', 'Problem', <Target size={20} />)}
+          {renderColumn(TECH_STACKS, 3, 'rgb(139 92 246)', 'Tech Stack', <Zap size={20} />)}
+        </div>
       </div>
 
-      {/* Spin Button */}
+      {/* Modern Spin Button */}
       <button
         onClick={spin}
         disabled={isSpinning}
         className={`
-          px-8 py-4 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500
-          text-white font-bold text-lg shadow-lg transition-all duration-200
-          hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
-          disabled:scale-100 disabled:shadow-lg border-4 border-white
+          px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700
+          text-white font-semibold rounded-lg
+          transition-all duration-200
+          disabled:opacity-50 disabled:cursor-not-allowed
         `}
       >
-        {isSpinning ? 'SPINNING!' : 'SPIN'}
+        {isSpinning ? 'Spinning...' : 'Spin'}
       </button>
 
-      {/* Result Display */}
+      {/* Results Card */}
       {result && !isSpinning && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full">
-          <h3 className="text-xl font-bold text-center mb-4 text-gray-800 dark:text-white">
-            Your Combination!
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-2 bg-purple-100 dark:bg-purple-900/30 rounded">
-              <span className="font-semibold text-purple-800 dark:text-purple-200">Market:</span>
-              <span className="text-purple-900 dark:text-purple-100">{result.market}</span>
+        <div className="max-w-lg w-full mx-auto">
+          <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-6 text-center">
+              Your Combination
+            </h3>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-3 px-4 bg-gray-800/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Briefcase size={16} className="text-blue-400" />
+                  <span className="text-gray-300 font-medium">Market</span>
+                </div>
+                <span className="text-blue-400 font-semibold">{result.market}</span>
+              </div>
+
+              <div className="flex items-center justify-between py-3 px-4 bg-gray-800/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Users size={16} className="text-emerald-400" />
+                  <span className="text-gray-300 font-medium">User Type</span>
+                </div>
+                <span className="text-emerald-400 font-semibold">{result.userType}</span>
+              </div>
+
+              <div className="flex items-center justify-between py-3 px-4 bg-gray-800/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Target size={16} className="text-amber-400" />
+                  <span className="text-gray-300 font-medium">Problem</span>
+                </div>
+                <span className="text-amber-400 font-semibold">{result.problemType}</span>
+              </div>
+
+              <div className="flex items-center justify-between py-3 px-4 bg-gray-800/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Zap size={16} className="text-purple-400" />
+                  <span className="text-gray-300 font-medium">Tech Stack</span>
+                </div>
+                <span className="text-purple-400 font-semibold">{result.techStack}</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between p-2 bg-blue-100 dark:bg-blue-900/30 rounded">
-              <span className="font-semibold text-blue-800 dark:text-blue-200">User Type:</span>
-              <span className="text-blue-900 dark:text-blue-100">{result.userType}</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-green-100 dark:bg-green-900/30 rounded">
-              <span className="font-semibold text-green-800 dark:text-green-200">Problem:</span>
-              <span className="text-green-900 dark:text-green-100">{result.problemType}</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-orange-100 dark:bg-orange-900/30 rounded">
-              <span className="font-semibold text-orange-800 dark:text-orange-200">Tech Stack:</span>
-              <span className="text-orange-900 dark:text-orange-100">{result.techStack}</span>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => navigator.share?.({ title: 'BuildRoulette Result', text: `My combination: ${result.market} + ${result.userType} + ${result.problemType} + ${result.techStack}`, url: window.location.href })}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+              >
+                <Share size={16} />
+                Share
+              </button>
+              <button
+                onClick={spin}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <RotateCcw size={16} />
+                Spin Again
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {isSpinning && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full">
-          <div className="text-center">
-            <div className="animate-pulse text-gray-600 dark:text-gray-400">
-              🎰 Rolling the slots...
+        <div className="max-w-lg w-full mx-auto">
+          <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-white font-medium mb-2">Spinning...</p>
+              <p className="text-gray-400 text-sm">Generating your combination</p>
             </div>
           </div>
         </div>

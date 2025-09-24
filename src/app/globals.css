@@ -120,3 +120,94 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Premium Casino Effects */
+@layer utilities {
+  /* Animation delays for staggered effects */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  /* Glowing text effect */
+  .text-glow {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
+  }
+
+  /* 3D button effect */
+  .btn-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.2s ease;
+  }
+  .btn-3d:hover {
+    transform: perspective(1000px) rotateX(-10deg) rotateY(5deg);
+  }
+  .btn-3d:active {
+    transform: perspective(1000px) rotateX(5deg) rotateY(-2deg) scale(0.98);
+  }
+
+  /* Floating animation for background particles */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .animate-float-delayed {
+    animation: float 8s ease-in-out infinite 2s;
+  }
+
+  /* Shimmer effect for premium elements */
+  .shimmer {
+    background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
+    background-size: 200% 200%;
+    animation: shimmer 3s infinite;
+  }
+
+  /* Pulse glow for winning elements */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite alternate;
+  }
+
+  /* Neon border effect */
+  .neon-border {
+    border: 2px solid;
+    box-shadow:
+      0 0 5px currentColor,
+      inset 0 0 5px currentColor,
+      0 0 10px currentColor,
+      inset 0 0 10px currentColor;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% -200%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 5px currentColor;
+  }
+  100% {
+    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
