@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 export type Market = 'SaaS' | 'E-commerce' | 'FinTech' | 'HealthTech' | 'EdTech' | 'Gaming' | 'Creator Economy' | 'Real Estate' | 'Travel' | 'Food & Beverage' | 'Fitness' | 'Productivity';
 
@@ -32,9 +32,7 @@ interface RouletteWheelProps {
 export default function RouletteWheel({ onResult }: RouletteWheelProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<Combination | null>(null);
-  const wheelRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [wheelRotations, setWheelRotations] = useState<number[]>([0, 0, 0, 0]);
-  const [hasSpun, setHasSpun] = useState(false);
+  const [columnPositions, setColumnPositions] = useState<number[]>([0, 0, 0, 0]);
 
   const generateRandomResult = useCallback((): Combination => {
     return {
@@ -50,179 +48,67 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
 
     setIsSpinning(true);
     setResult(null);
-    setHasSpun(false);
 
     // Generate result first
     const newResult = generateRandomResult();
 
-    const rings = [
-      { data: MARKETS, startColor: '#8b5cf6', endColor: '#7c3aed', label: 'Market' },
-      { data: USER_TYPES, startColor: '#3b82f6', endColor: '#2563eb', label: 'User Type' },
-      { data: PROBLEM_TYPES, startColor: '#10b981', endColor: '#059669', label: 'Problem Type' },
-      { data: TECH_STACKS, startColor: '#f97316', endColor: '#ea580c', label: 'Tech Stack' },
-    ];
+    const columns = [MARKETS, USER_TYPES, PROBLEM_TYPES, TECH_STACKS];
+    const targetValues = [newResult.market, newResult.userType, newResult.problemType, newResult.techStack];
 
-    // Calculate target positions for each wheel to land on the selected values
-    const targetRotations = rings.map((ring, index) => {
-      const direction = index % 2 === 0 ? 1 : -1; // Alternating directions
-      const segmentAngle = 360 / ring.data.length;
-      let targetValue;
+    // Calculate target positions for each column
+    const targetPositions = columns.map((columnData, index) => {
+      const targetIndex = (columnData as readonly string[]).indexOf(targetValues[index]!);
+      const itemHeight = 80; // Height of each slot item
 
-      switch(index) {
-        case 0: targetValue = newResult.market; break;
-        case 1: targetValue = newResult.userType; break;
-        case 2: targetValue = newResult.problemType; break;
-        case 3: targetValue = newResult.techStack; break;
-        default: targetValue = ring.data[0];
-      }
+      // Add extra spins (5-10 full cycles) then land on target
+      const extraSpins = (5 + Math.random() * 5) * columnData.length;
+      const currentPosition = columnPositions[index] || 0;
 
-      const targetIndex = ring.data.indexOf(targetValue);
-      const targetAngle = targetIndex * segmentAngle;
-
-      // Add current rotation to maintain position, then add multiple rotations plus target
-      const currentRotation = wheelRotations[index] || 0;
-      const fullRotations = (3 + Math.random() * 2) * 360;
-      return currentRotation + direction * (fullRotations + (360 - targetAngle));
+      return currentPosition + (extraSpins + targetIndex) * itemHeight;
     });
 
-    setWheelRotations(targetRotations);
-    setHasSpun(true);
+    setColumnPositions(targetPositions);
 
-    // Simulate spinning duration with easing
-    const spinDuration = 3000 + Math.random() * 2000; // 3-5 seconds
+    // Simulate spinning duration
+    const spinDuration = 3000 + Math.random() * 2000;
 
     setTimeout(() => {
       setResult(newResult);
       setIsSpinning(false);
       onResult?.(newResult);
     }, spinDuration);
-  }, [isSpinning, generateRandomResult, onResult, wheelRotations]);
+  }, [isSpinning, generateRandomResult, onResult, columnPositions]);
 
-  const renderWheel = () => {
-    const wheelSize = 400;
-
-    // Ring sizes from outer to inner
-    const rings = [
-      { data: MARKETS, startColor: '#8b5cf6', endColor: '#7c3aed', label: 'Market' },
-      { data: USER_TYPES, startColor: '#3b82f6', endColor: '#2563eb', label: 'User Type' },
-      { data: PROBLEM_TYPES, startColor: '#10b981', endColor: '#059669', label: 'Problem Type' },
-      { data: TECH_STACKS, startColor: '#f97316', endColor: '#ea580c', label: 'Tech Stack' },
-    ];
+  const renderColumn = (data: readonly string[], columnIndex: number, color: string, label: string) => {
+    // Create extended array for continuous scrolling effect
+    const extendedData = [...data, ...data, ...data, ...data, ...data];
 
     return (
-      <div className="relative flex items-center justify-center">
-        <div className="relative w-[400px] h-[400px] rounded-full">
-          {rings.map((ring, ringIndex) => {
-            const outerRadius = wheelSize / 2 - (ringIndex * 45);
-            const innerRadius = wheelSize / 2 - ((ringIndex + 1) * 45) + (ringIndex === 3 ? 15 : 0);
-            const segmentAngle = 360 / ring.data.length;
+      <div key={label} className="flex flex-col items-center">
+        <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{label}</h3>
+        <div className="relative w-40 h-80 border-4 border-white rounded-lg shadow-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+          {/* Selection indicator */}
+          <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 h-20 border-t-2 border-b-2 border-yellow-400 bg-yellow-100/50 dark:bg-yellow-900/30 z-10 pointer-events-none"></div>
 
-            return (
-              <div
-                key={ring.label}
-                className={`absolute inset-0 ${hasSpun ? 'transition-transform duration-[4000ms] ease-out' : ''}`}
-                ref={el => wheelRefs.current[ringIndex] = el}
-                style={{
-                  transform: `rotate(${wheelRotations[ringIndex]}deg)`,
-                }}
-              >
-                {ring.data.map((item, index) => {
-                  const angle = index * segmentAngle;
-                  const x1 = Math.cos((angle - 90) * Math.PI / 180);
-                  const y1 = Math.sin((angle - 90) * Math.PI / 180);
-                  const x2 = Math.cos((angle + segmentAngle - 90) * Math.PI / 180);
-                  const y2 = Math.sin((angle + segmentAngle - 90) * Math.PI / 180);
-
-                  const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-
-                  const outerX1 = wheelSize / 2 + x1 * outerRadius;
-                  const outerY1 = wheelSize / 2 + y1 * outerRadius;
-                  const outerX2 = wheelSize / 2 + x2 * outerRadius;
-                  const outerY2 = wheelSize / 2 + y2 * outerRadius;
-
-                  const innerX1 = wheelSize / 2 + x1 * innerRadius;
-                  const innerY1 = wheelSize / 2 + y1 * innerRadius;
-                  const innerX2 = wheelSize / 2 + x2 * innerRadius;
-                  const innerY2 = wheelSize / 2 + y2 * innerRadius;
-
-                  const pathData = [
-                    `M ${outerX1} ${outerY1}`,
-                    `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${outerX2} ${outerY2}`,
-                    `L ${innerX2} ${innerY2}`,
-                    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerX1} ${innerY1}`,
-                    'Z'
-                  ].join(' ');
-
-                  // Text position - middle of the segment
-                  const textAngle = angle + segmentAngle / 2;
-                  const textRadius = (outerRadius + innerRadius) / 2;
-                  const textX = wheelSize / 2 + Math.cos((textAngle - 90) * Math.PI / 180) * textRadius;
-                  const textY = wheelSize / 2 + Math.sin((textAngle - 90) * Math.PI / 180) * textRadius;
-
-                  return (
-                    <svg
-                      key={item}
-                      className="absolute inset-0 w-full h-full"
-                      viewBox={`0 0 ${wheelSize} ${wheelSize}`}
-                    >
-                      <defs>
-                        <linearGradient id={`gradient-${ringIndex}-${index}`} gradientUnits="objectBoundingBox">
-                          <stop offset="0%" stopColor={ring.startColor} />
-                          <stop offset="100%" stopColor={ring.endColor} />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d={pathData}
-                        fill={`url(#gradient-${ringIndex}-${index})`}
-                        stroke="#ffffff"
-                        strokeWidth="2"
-                        opacity={0.9}
-                      />
-                      <text
-                        x={textX}
-                        y={textY}
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        className={`fill-white font-semibold ${ringIndex === 0 ? 'text-xs' : ringIndex === 1 ? 'text-xs' : ringIndex === 2 ? 'text-[10px]' : 'text-[8px]'}`}
-                        transform={`rotate(${textAngle > 90 && textAngle < 270 ? textAngle + 180 : textAngle}, ${textX}, ${textY})`}
-                      >
-                        {ringIndex === 3
-                          ? item.length > 6 ? item.substring(0, 6) + '...' : item
-                          : ringIndex === 2
-                          ? item.length > 8 ? item.substring(0, 8) + '...' : item
-                          : item.length > 10 ? item.substring(0, 10) + '...' : item}
-                      </text>
-                    </svg>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Center circle with spin button */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <button
-            onClick={spin}
-            disabled={isSpinning}
-            className={`
-              w-20 h-20 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500
-              text-white font-bold text-sm shadow-lg transition-all duration-200
-              hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
-              disabled:scale-100 disabled:shadow-lg border-4 border-white
-            `}
+          {/* Scrolling items */}
+          <div
+            className={`relative transition-transform duration-[3000ms] ease-out`}
+            style={{
+              transform: `translateY(-${columnPositions[columnIndex]}px)`,
+            }}
           >
-            {isSpinning ? (
-              <div className="text-xs">SPINNING!</div>
-            ) : (
-              <div className="text-xs">SPIN</div>
-            )}
-          </button>
-        </div>
-
-        {/* Pointer */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-b-[30px] border-l-transparent border-r-transparent border-b-red-500"></div>
+            {extendedData.map((item, index) => (
+              <div
+                key={`${item}-${index}`}
+                className={`h-20 flex items-center justify-center text-white font-semibold px-2 text-center border-b border-gray-300 dark:border-gray-600`}
+                style={{ backgroundColor: color }}
+              >
+                <span className="text-sm leading-tight">
+                  {item.length > 12 ? item.substring(0, 12) + '...' : item}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -230,7 +116,27 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
 
   return (
     <div className="flex flex-col items-center space-y-8">
-      {renderWheel()}
+      {/* Slot Machine */}
+      <div className="flex gap-6 items-start">
+        {renderColumn(MARKETS, 0, '#8b5cf6', 'Market')}
+        {renderColumn(USER_TYPES, 1, '#3b82f6', 'User Type')}
+        {renderColumn(PROBLEM_TYPES, 2, '#10b981', 'Problem')}
+        {renderColumn(TECH_STACKS, 3, '#f97316', 'Tech Stack')}
+      </div>
+
+      {/* Spin Button */}
+      <button
+        onClick={spin}
+        disabled={isSpinning}
+        className={`
+          px-8 py-4 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500
+          text-white font-bold text-lg shadow-lg transition-all duration-200
+          hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
+          disabled:scale-100 disabled:shadow-lg border-4 border-white
+        `}
+      >
+        {isSpinning ? 'SPINNING!' : 'SPIN'}
+      </button>
 
       {/* Result Display */}
       {result && !isSpinning && (
@@ -263,7 +169,7 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full">
           <div className="text-center">
             <div className="animate-pulse text-gray-600 dark:text-gray-400">
-              🎯 Spinning the wheel of destiny...
+              🎰 Rolling the slots...
             </div>
           </div>
         </div>
