@@ -51,6 +51,7 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
 
     // Generate result first
     const newResult = generateRandomResult();
+    console.log('🎯 Target results:', newResult);
 
     const columns = [MARKETS, USER_TYPES, PROBLEM_TYPES, TECH_STACKS];
     const targetValues = [newResult.market, newResult.userType, newResult.problemType, newResult.techStack];
@@ -58,13 +59,33 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
     // Calculate target positions for each column
     const targetPositions = columns.map((columnData, index) => {
       const targetIndex = (columnData as readonly string[]).indexOf(targetValues[index]!);
-      const itemHeight = 80; // Height of each slot item
+      const itemHeight = 80;
+      const columnLength = columnData.length;
 
-      // Add extra spins (5-10 full cycles) then land on target
-      const extraSpins = (5 + Math.random() * 5) * columnData.length;
-      const currentPosition = columnPositions[index] || 0;
+      // Container is 320px tall (h-80), indicator is at 160px from top
+      // To center an item in the indicator:
+      // - Indicator center is at 160px from container top
+      // - Item center should align with indicator center
+      // - Item at index N starts at N * itemHeight from the scrolling div top
+      // - Item center is at (N * itemHeight) + (itemHeight/2)
+      // - We want: (N * itemHeight) + (itemHeight/2) - translateY = 160
+      // - So: translateY = (N * itemHeight) + (itemHeight/2) - 160
+      // - Simplified: translateY = (N * itemHeight) + 40 - 160 = (N * itemHeight) - 120
 
-      return currentPosition + (extraSpins + targetIndex) * itemHeight;
+      const positionToCenter = (targetIndex * itemHeight) - 120;
+
+      // Add spinning effect - multiple full cycles
+      const fullCycles = Math.floor(5 + Math.random() * 5);
+      const extraSpins = fullCycles * columnLength * itemHeight;
+
+      const finalPosition = positionToCenter + extraSpins;
+
+      console.log(`Column ${index}: Target "${targetValues[index]}" at index ${targetIndex}`);
+      console.log(`  Position to center: ${positionToCenter}px`);
+      console.log(`  Extra spins: ${extraSpins}px`);
+      console.log(`  Final position: ${finalPosition}px`);
+
+      return finalPosition;
     });
 
     setColumnPositions(targetPositions);
@@ -77,22 +98,22 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
       setIsSpinning(false);
       onResult?.(newResult);
     }, spinDuration);
-  }, [isSpinning, generateRandomResult, onResult, columnPositions]);
+  }, [isSpinning, generateRandomResult, onResult]);
 
   const renderColumn = (data: readonly string[], columnIndex: number, color: string, label: string) => {
-    // Create extended array for continuous scrolling effect
-    const extendedData = [...data, ...data, ...data, ...data, ...data];
+    // Create extended array for continuous scrolling effect (need enough copies for long spins)
+    const extendedData = Array(10).fill(data).flat();
 
     return (
       <div key={label} className="flex flex-col items-center">
         <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{label}</h3>
         <div className="relative w-40 h-80 border-4 border-white rounded-lg shadow-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-          {/* Selection indicator */}
-          <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 h-20 border-t-2 border-b-2 border-yellow-400 bg-yellow-100/50 dark:bg-yellow-900/30 z-10 pointer-events-none"></div>
+          {/* Selection indicator - positioned at center */}
+          <div className="absolute top-[160px] left-0 right-0 transform -translate-y-1/2 h-20 border-t-2 border-b-2 border-yellow-400 bg-yellow-100/50 dark:bg-yellow-900/30 z-10 pointer-events-none"></div>
 
           {/* Scrolling items */}
           <div
-            className={`relative transition-transform duration-[3000ms] ease-out`}
+            className={`relative ${isSpinning ? 'transition-transform duration-[3000ms] ease-out' : ''}`}
             style={{
               transform: `translateY(-${columnPositions[columnIndex]}px)`,
             }}
