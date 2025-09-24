@@ -55,65 +55,42 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
 
     const columns = [MARKETS, USER_TYPES, PROBLEM_TYPES, TECH_STACKS];
     const targetValues = [newResult.market, newResult.userType, newResult.problemType, newResult.techStack];
+    const extraRotations = [5, 10, 15, 20]; // Each column gets different amounts of spinning
 
-    // Calculate target positions for each column
+    // Calculate target positions with staggered extra rotations
     const targetPositions = columns.map((columnData, index) => {
       const targetIndex = (columnData as readonly string[]).indexOf(targetValues[index]!);
       const itemHeight = 80;
       const columnLength = columnData.length;
-
-      // Container is 320px tall (h-80), indicator is at 160px from top
-      // To center an item in the indicator:
-      // - Indicator center is at 160px from container top
-      // - Item center should align with indicator center
-      // - Item at index N starts at N * itemHeight from the scrolling div top
-      // - Item center is at (N * itemHeight) + (itemHeight/2)
-      // - We want: (N * itemHeight) + (itemHeight/2) - translateY = 160
-      // - So: translateY = (N * itemHeight) + (itemHeight/2) - 160
-      // - Simplified: translateY = (N * itemHeight) + 40 - 160 = (N * itemHeight) - 120
-
       const positionToCenter = (targetIndex * itemHeight) - 120;
-
-      // Add spinning effect - multiple full cycles
-      const fullCycles = Math.floor(5 + Math.random() * 5);
-      const extraSpins = fullCycles * columnLength * itemHeight;
-
-      const finalPosition = positionToCenter + extraSpins;
-
-      console.log(`Column ${index}: Target "${targetValues[index]}" at index ${targetIndex}`);
-      console.log(`  Position to center: ${positionToCenter}px`);
-      console.log(`  Extra spins: ${extraSpins}px`);
-      console.log(`  Final position: ${finalPosition}px`);
-
-      return finalPosition;
+      const extraSpins = extraRotations[index]! * columnLength * itemHeight;
+      return positionToCenter + extraSpins;
     });
 
     setColumnPositions(targetPositions);
 
-    // Simulate spinning duration
-    const spinDuration = 3000 + Math.random() * 2000;
-
+    // Show result after animation completes (4 seconds)
     setTimeout(() => {
       setResult(newResult);
       setIsSpinning(false);
       onResult?.(newResult);
-    }, spinDuration);
+    }, 4000);
   }, [isSpinning, generateRandomResult, onResult]);
 
   const renderColumn = (data: readonly string[], columnIndex: number, color: string, label: string) => {
-    // Create extended array for continuous scrolling effect (need enough copies for long spins)
-    const extendedData = Array(10).fill(data).flat();
+    // Create extended array for continuous scrolling effect - need enough for 20+ rotations
+    const extendedData = Array(25).fill(data).flat();
 
     return (
       <div key={label} className="flex flex-col items-center">
         <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{label}</h3>
         <div className="relative w-40 h-80 border-4 border-white rounded-lg shadow-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-          {/* Selection indicator - positioned at center */}
+          {/* Selection indicator */}
           <div className="absolute top-[160px] left-0 right-0 transform -translate-y-1/2 h-20 border-t-2 border-b-2 border-yellow-400 bg-yellow-100/50 dark:bg-yellow-900/30 z-10 pointer-events-none"></div>
 
           {/* Scrolling items */}
           <div
-            className={`relative ${isSpinning ? 'transition-transform duration-[3000ms] ease-out' : ''}`}
+            className={`relative ${isSpinning ? 'transition-transform duration-[4000ms] ease-out' : ''}`}
             style={{
               transform: `translateY(-${columnPositions[columnIndex]}px)`,
             }}
