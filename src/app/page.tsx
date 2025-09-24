@@ -84,7 +84,11 @@ export default function Home() {
               </p>
             </div>
             <div className="flex-shrink-0 ml-4">
-              <SettingsDialog onApiKeyChange={handleApiKeyChange} />
+              <SettingsDialog
+                onApiKeyChange={handleApiKeyChange}
+                open={showSettingsDialog}
+                onOpenChange={setShowSettingsDialog}
+              />
             </div>
           </div>
 

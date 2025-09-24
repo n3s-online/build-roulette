@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Settings, Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { Settings, Eye, EyeOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,56 +9,73 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { getStoredApiKey, storeApiKey, removeStoredApiKey } from '@/lib/utils'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getStoredApiKey, storeApiKey, removeStoredApiKey } from "@/lib/utils";
 
 interface SettingsDialogProps {
-  onApiKeyChange?: (hasKey: boolean) => void
+  onApiKeyChange?: (hasKey: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function SettingsDialog({ onApiKeyChange }: SettingsDialogProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [apiKey, setApiKey] = useState('')
-  const [showApiKey, setShowApiKey] = useState(false)
-  const [hasStoredKey, setHasStoredKey] = useState(false)
+export default function SettingsDialog({
+  onApiKeyChange,
+  open,
+  onOpenChange,
+}: SettingsDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [hasStoredKey, setHasStoredKey] = useState(false);
 
   useEffect(() => {
-    const storedKey = getStoredApiKey()
+    const storedKey = getStoredApiKey();
     if (storedKey) {
-      setApiKey(storedKey)
-      setHasStoredKey(true)
-      onApiKeyChange?.(true)
+      setApiKey(storedKey);
+      setHasStoredKey(true);
+      onApiKeyChange?.(true);
     }
-  }, [onApiKeyChange])
+  }, [onApiKeyChange]);
 
   const handleSave = () => {
     if (apiKey.trim()) {
-      storeApiKey(apiKey.trim())
-      setHasStoredKey(true)
-      onApiKeyChange?.(true)
-      setIsOpen(false)
+      storeApiKey(apiKey.trim());
+      setHasStoredKey(true);
+      onApiKeyChange?.(true);
+      if (onOpenChange) {
+        onOpenChange(false);
+      } else {
+        setIsOpen(false);
+      }
     }
-  }
+  };
 
   const handleRemove = () => {
-    removeStoredApiKey()
-    setApiKey('')
-    setHasStoredKey(false)
-    onApiKeyChange?.(false)
-  }
+    removeStoredApiKey();
+    setApiKey("");
+    setHasStoredKey(false);
+    onApiKeyChange?.(false);
+  };
 
   const handleCancel = () => {
     // Reset to stored key if canceling
-    const storedKey = getStoredApiKey()
-    setApiKey(storedKey || '')
-    setIsOpen(false)
-  }
+    const storedKey = getStoredApiKey();
+    setApiKey(storedKey || "");
+    if (onOpenChange) {
+      onOpenChange(false);
+    } else {
+      setIsOpen(false);
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={open !== undefined ? open : isOpen}
+      onOpenChange={onOpenChange || setIsOpen}
+    >
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -84,7 +101,7 @@ export default function SettingsDialog({ onApiKeyChange }: SettingsDialogProps) 
             <div className="relative">
               <Input
                 id="api-key"
-                type={showApiKey ? 'text' : 'password'}
+                type={showApiKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="sk-ant-..."
@@ -102,7 +119,7 @@ export default function SettingsDialog({ onApiKeyChange }: SettingsDialogProps) 
             </div>
           </div>
           <div className="text-xs text-gray-500">
-            Get your API key from{' '}
+            Get your API key from{" "}
             <a
               href="https://console.anthropic.com/"
               target="_blank"
@@ -140,5 +157,5 @@ export default function SettingsDialog({ onApiKeyChange }: SettingsDialogProps) 
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
