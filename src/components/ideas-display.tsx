@@ -16,15 +16,13 @@ import { GeneratedIdea, Combination } from '@/lib/types'
 interface IdeasDisplayProps {
   ideas: GeneratedIdea[]
   combination: Combination
-  onGenerateNew?: () => void
   onSpinAgain?: () => void
 }
 
-export default function IdeasDisplay({ 
-  ideas, 
-  combination, 
-  onGenerateNew, 
-  onSpinAgain 
+export default function IdeasDisplay({
+  ideas,
+  combination,
+  onSpinAgain
 }: IdeasDisplayProps) {
   const [expandedIdea, setExpandedIdea] = useState<number | null>(0) // First idea expanded by default
 
@@ -172,20 +170,13 @@ export default function IdeasDisplay({
         ))}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-4 justify-center pt-6">
-        <button
-          onClick={onGenerateNew}
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors"
-        >
-          <Lightbulb size={16} />
-          Generate New Ideas
-        </button>
+      {/* Action Button */}
+      <div className="flex justify-center pt-8">
         <button
           onClick={onSpinAgain}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+          className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-blue-500/25"
         >
-          <RotateCcw size={16} />
+          <RotateCcw size={18} />
           Spin Again
         </button>
       </div>

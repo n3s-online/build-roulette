@@ -24,6 +24,7 @@ export default function Home() {
     setCurrentCombination(combination);
     setGeneratedIdeas(null); // Clear previous ideas
     setGenerationError(null);
+    setIsGeneratingIdeas(false); // Stop any loading state
   };
 
   const handleGenerateIdeas = async (combination: Combination) => {
@@ -68,10 +69,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-950">
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900/50 via-transparent to-blue-900/20"></div>
+    <div className="min-h-screen bg-gray-950">
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900/50 via-transparent to-blue-900/20 pointer-events-none"></div>
 
-      <div className="container mx-auto px-4 py-16 relative">
+      <main className="container mx-auto px-4 py-16 relative">
         <div className="max-w-4xl mx-auto">
           {/* Header with Settings */}
           <div className="flex justify-between items-start mb-16">
@@ -133,13 +134,12 @@ export default function Home() {
               <IdeasDisplay
                 ideas={generatedIdeas}
                 combination={currentCombination}
-                onGenerateNew={() => handleGenerateIdeas(currentCombination)}
                 onSpinAgain={handleSpinAgain}
               />
             </div>
           )}
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -9,6 +9,7 @@ interface FakeLoadingBarProps {
 
 export default function FakeLoadingBar({ isLoading, onComplete }: FakeLoadingBarProps) {
   const [progress, setProgress] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
 
   const loadingMessages = useMemo(() => [
     "Researching market trends...",
@@ -25,13 +26,23 @@ export default function FakeLoadingBar({ isLoading, onComplete }: FakeLoadingBar
 
   useEffect(() => {
     if (!isLoading) {
-      setProgress(0);
-      setLoadingMessage(loadingMessages[0]);
+      if (progress > 0) {
+        // Start fade out after showing 100%
+        setIsVisible(false);
+        const resetTimeout = setTimeout(() => {
+          setProgress(0);
+          setLoadingMessage(loadingMessages[0]);
+        }, 1000); // Wait for fade out
+        return () => clearTimeout(resetTimeout);
+      }
       return;
     }
 
+    // Show the component when loading starts
+    setIsVisible(true);
+
     const startTime = Date.now();
-    const maxDuration = 40000; // 40 seconds
+    const maxDuration = 60000; // 60 seconds
 
     const updateProgress = () => {
       const elapsed = Date.now() - startTime;
@@ -45,23 +56,25 @@ export default function FakeLoadingBar({ isLoading, onComplete }: FakeLoadingBar
       } else {
         // Exponential curve that slows down as it approaches 95%
         const exponentialProgress = (1 - Math.exp(-timeRatio * 3)) * 95;
-        // Add some randomness (±3%)
-        const randomOffset = (Math.random() - 0.5) * 6;
-        targetProgress = Math.min(95, Math.max(0, exponentialProgress + randomOffset));
+        // Add some randomness (0-3%) - only positive
+        const randomOffset = Math.random() * 3;
+        targetProgress = Math.min(95, exponentialProgress + randomOffset);
       }
 
       setProgress(prev => {
-        // Smooth transition to new progress
-        const diff = targetProgress - prev;
-        return prev + diff * 0.3; // 30% of the difference each time
+        // Only allow upward movement
+        return Math.max(prev, targetProgress);
       });
 
-      // Update loading message based on progress
-      const messageIndex = Math.min(
-        Math.floor((targetProgress / 95) * loadingMessages.length),
-        loadingMessages.length - 1
-      );
-      setLoadingMessage(loadingMessages[messageIndex]);
+      // Update loading message based on current progress
+      setProgress(currentProgress => {
+        const messageIndex = Math.min(
+          Math.floor((currentProgress / 95) * loadingMessages.length),
+          loadingMessages.length - 1
+        );
+        setLoadingMessage(loadingMessages[messageIndex]);
+        return currentProgress;
+      });
     };
 
     const interval = setInterval(updateProgress, 300 + Math.random() * 700); // Random intervals 300-1000ms
@@ -74,8 +87,9 @@ export default function FakeLoadingBar({ isLoading, onComplete }: FakeLoadingBar
     if (!isLoading && progress > 0) {
       setProgress(100);
       const completeTimeout = setTimeout(() => {
+        setIsVisible(false);
         if (onComplete) onComplete();
-      }, 500);
+      }, 800); // Show 100% briefly before fading
       return () => clearTimeout(completeTimeout);
     }
     return undefined;
@@ -84,7 +98,11 @@ export default function FakeLoadingBar({ isLoading, onComplete }: FakeLoadingBar
   if (progress === 0 && !isLoading) return null;
 
   return (
-    <div className="max-w-lg w-full mx-auto mt-8">
+    <div
+      className={`max-w-lg w-full mx-auto mt-8 transition-all duration-1000 ${
+        isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'
+      }`}
+    >
       <div className="bg-gray-900 rounded-lg p-8 border border-emerald-500/20">
         <div className="text-center">
           <div className="w-12 h-12 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
