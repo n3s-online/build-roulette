@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Briefcase, Users, Target, Zap, Share, RotateCcw } from 'lucide-react';
+import { Briefcase, Users, Target, Zap, Share, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export type Market = 'SaaS' | 'E-commerce' | 'FinTech' | 'HealthTech' | 'EdTech' | 'Gaming' | 'Creator Economy' | 'Real Estate' | 'Travel' | 'Food & Beverage' | 'Fitness' | 'Productivity';
 
@@ -101,12 +101,29 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
         <div className="relative">
           <div className="w-40 h-80 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
 
-            {/* Selection indicator */}
-            <div className={`absolute top-[160px] left-0 right-0 transform -translate-y-1/2 h-20 z-10 pointer-events-none transition-all duration-200 ${
-              isSpinning
-                ? 'bg-blue-500/10 border-y border-blue-500/30'
-                : 'bg-white/5 border-y border-gray-600'
-            }`}></div>
+            {/* Left Arrow - pointing toward column */}
+            <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 z-20">
+              <ChevronRight
+                size={20}
+                className={`transition-all duration-300 ${
+                  isSpinning
+                    ? 'text-yellow-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] animate-pulse'
+                    : 'text-gray-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.3)]'
+                }`}
+              />
+            </div>
+
+            {/* Right Arrow - pointing toward column */}
+            <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 z-20">
+              <ChevronLeft
+                size={20}
+                className={`transition-all duration-300 ${
+                  isSpinning
+                    ? 'text-yellow-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.8)] animate-pulse'
+                    : 'text-gray-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.3)]'
+                }`}
+              />
+            </div>
 
             {/* Scrolling items */}
             <div
@@ -137,8 +154,12 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
   return (
     <div className="flex flex-col items-center space-y-8">
       {/* Clean Slot Machine */}
-      <div className="bg-gray-900/50 rounded-2xl p-8 border border-gray-800">
-        <div className="flex gap-8 items-start justify-center">
+      <div className={`bg-gray-900/50 rounded-2xl p-8 border border-gray-800 transition-all duration-300 ${
+        isSpinning
+          ? 'shadow-[0_0_30px_rgba(59,130,246,0.3)] border-blue-500/30'
+          : 'shadow-[0_0_20px_rgba(0,0,0,0.5)]'
+      }`}>
+        <div className="flex gap-20 items-start justify-center">
           {renderColumn(MARKETS, 0, 'rgb(59 130 246)', 'Market', <Briefcase size={20} />)}
           {renderColumn(USER_TYPES, 1, 'rgb(16 185 129)', 'User Type', <Users size={20} />)}
           {renderColumn(PROBLEM_TYPES, 2, 'rgb(245 158 11)', 'Problem', <Target size={20} />)}
@@ -163,7 +184,7 @@ export default function RouletteWheel({ onResult }: RouletteWheelProps) {
       {/* Results Card */}
       {result && !isSpinning && (
         <div className="max-w-lg w-full mx-auto">
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+          <div className="bg-gray-900 rounded-lg p-6 border border-gray-700 shadow-[0_0_25px_rgba(34,197,94,0.2)] border-emerald-500/20">
             <h3 className="text-lg font-semibold text-white mb-6 text-center">
               Your Combination
             </h3>
