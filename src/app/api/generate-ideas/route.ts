@@ -1,7 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateObject, generateText } from "ai";
+import { generateText } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
+
+// Rate limiting and retry utilities
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: unknown) {
+      const isRateLimit = (error as Error)?.message?.includes('429') ||
+                         (error as Error)?.message?.includes('rate limit') ||
+                         (error as { status?: number })?.status === 429;
+
+      if (!isRateLimit || attempt === maxRetries) {
+        throw error;
+      }
+
+      // Exponential backoff with jitter
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+      console.log(`Rate limited, retrying in ${Math.round(delay)}ms (attempt ${attempt}/${maxRetries})`);
+      await sleep(delay);
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
 
 // Zod schemas for validation
 const GeneratedIdeaSchema = z.object({
@@ -54,66 +83,138 @@ export async function POST(request: NextRequest) {
       apiKey: apiKey,
     });
 
-    // Step 1: Research the problem space using web search
-    const webSearchTool = anthropic.tools.webSearch_20250305({ maxUses: 5 });
+    // Optimized single API call with built-in web search capability
+    const webSearchTool = anthropic.tools.webSearch_20250305({ maxUses: 3 }); // Reduced from 5 to 3
 
-    const researchPrompt = `Research real problems for ${combination.userType} in ${combination.market} related to ${combination.problemType}. Find:
-1. Top 3 pain points and unmet needs
-2. Existing solutions and gaps
-3. Recent trends and opportunities
+    const optimizedPrompt = `You are a product idea generator with web search capabilities. Generate 3 unique, feasible product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
 
-Be concise. Focus on validated problems that need solving.`;
+TASK: Use web search to quickly identify 2-3 current pain points for ${combination.userType} in ${combination.market}, then generate ideas that address these problems.
 
-    // Try web search research, fallback to basic generation if rate limited
-    let researchInsights = "";
-    try {
-      console.log("Starting web research for:", combination);
-      const researchResult = await generateText({
-        model: anthropic("claude-sonnet-4-20250514"),
-        prompt: researchPrompt,
-        tools: { web_search: webSearchTool },
-      });
-      console.log("Research completed, generating ideas...");
+Requirements for each idea:
+- Name: Catchy, memorable product name
+- Description: 1-2 sentences addressing researched problems
+- Core Features: 3-5 specific features solving real problems
+- Tech Stack: 3-5 technologies (must include ${combination.techStack})
+- Marketing: 3-4 lead generation strategies
 
-      // Truncate research if it's too long to avoid rate limits
-      const maxResearchLength = 1500; // Reduced further
-      researchInsights =
-        researchResult.text.length > maxResearchLength
-          ? researchResult.text.substring(0, maxResearchLength) + "..."
-          : researchResult.text;
-    } catch (error) {
-      console.log("Web search failed, proceeding without research:", error);
-      researchInsights =
-        "No web research available due to rate limits. Generate ideas based on general market knowledge.";
+Make ideas unique, feasible for solo developers, based on real market research.
+
+Return ONLY valid JSON matching this exact structure:
+{
+  "ideas": [
+    {
+      "name": "string",
+      "description": "string",
+      "coreFeatures": ["string", "string", "string"],
+      "suggestedTechStack": ["string", "string", "string"],
+      "leadGenerationIdeas": ["string", "string", "string"]
     }
+  ]
+}`;
 
-    // Build the prompt with research insights
-    const prompt = `Generate 3 product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}:
-
-RESEARCH:
-${researchInsights}
-
-Based on research, create 3 ideas addressing real problems. Each needs:
-- Name
-- Description (1-2 sentences referencing research problems)
-- 3-5 core features solving researched problems
-- 3-5 technologies (include ${combination.techStack})
-- 3-4 marketing strategies
-
-Make ideas unique, feasible for solo developers, addressing research-validated problems.
-
-Respond only with valid JSON, no additional text.`;
-
-    // Generate ideas using Anthropic
-    const result = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
-      schema: IdeaGenerationSchema,
-      prompt,
-      temperature: 0.8,
+    // Single API call with retry logic and web search
+    const result = await withRetry(async () => {
+      return await generateText({
+        model: anthropic("claude-sonnet-4-20250514"),
+        prompt: optimizedPrompt,
+        tools: { web_search: webSearchTool },
+        temperature: 0.8,
+      });
     });
 
+    // Parse the JSON response with better error handling
+    let parsedResult;
+    try {
+      // Clean the response text - remove any markdown formatting
+      let cleanText = result.text.trim();
+
+      // If response is wrapped in markdown code blocks, extract the JSON
+      const jsonMatch = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch && jsonMatch[1]) {
+        cleanText = jsonMatch[1].trim();
+      }
+
+      // Remove any leading/trailing non-JSON content
+      const jsonStart = cleanText.indexOf('{');
+      const jsonEnd = cleanText.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
+      }
+
+      console.log("Attempting to parse AI response:", cleanText.substring(0, 200) + "...");
+      parsedResult = JSON.parse(cleanText);
+
+      // Validate with Zod
+      const validatedResult = IdeaGenerationSchema.parse(parsedResult);
+      parsedResult = validatedResult;
+
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", parseError);
+      console.error("Raw AI response:", result.text.substring(0, 500) + "...");
+
+      // Fallback: generate basic ideas without web search
+      console.log("Falling back to basic idea generation...");
+      const fallbackResult = await withRetry(async () => {
+        return await generateText({
+          model: anthropic("claude-sonnet-4-20250514"),
+          prompt: `Generate exactly 3 product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
+
+Return ONLY valid JSON in this exact format (no extra text, no markdown, no explanations):
+{
+  "ideas": [
+    {
+      "name": "Product Name 1",
+      "description": "Brief description addressing a real problem",
+      "coreFeatures": ["Feature 1", "Feature 2", "Feature 3"],
+      "suggestedTechStack": ["${combination.techStack}", "Tech 2", "Tech 3"],
+      "leadGenerationIdeas": ["Marketing 1", "Marketing 2", "Marketing 3"]
+    },
+    {
+      "name": "Product Name 2",
+      "description": "Brief description addressing a real problem",
+      "coreFeatures": ["Feature 1", "Feature 2", "Feature 3"],
+      "suggestedTechStack": ["${combination.techStack}", "Tech 2", "Tech 3"],
+      "leadGenerationIdeas": ["Marketing 1", "Marketing 2", "Marketing 3"]
+    },
+    {
+      "name": "Product Name 3",
+      "description": "Brief description addressing a real problem",
+      "coreFeatures": ["Feature 1", "Feature 2", "Feature 3"],
+      "suggestedTechStack": ["${combination.techStack}", "Tech 2", "Tech 3"],
+      "leadGenerationIdeas": ["Marketing 1", "Marketing 2", "Marketing 3"]
+    }
+  ]
+}`,
+          temperature: 0.3,
+        });
+      });
+
+      try {
+        let fallbackText = fallbackResult.text.trim();
+        const fallbackMatch = fallbackText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (fallbackMatch && fallbackMatch[1]) {
+          fallbackText = fallbackMatch[1].trim();
+        }
+
+        const fallbackStart = fallbackText.indexOf('{');
+        const fallbackEnd = fallbackText.lastIndexOf('}');
+        if (fallbackStart !== -1 && fallbackEnd !== -1) {
+          fallbackText = fallbackText.substring(fallbackStart, fallbackEnd + 1);
+        }
+
+        parsedResult = JSON.parse(fallbackText);
+        const validatedFallback = IdeaGenerationSchema.parse(parsedResult);
+        parsedResult = validatedFallback;
+        console.log("Fallback generation successful");
+
+      } catch (fallbackError) {
+        console.error("Fallback also failed:", fallbackError);
+        throw new Error("AI service temporarily unavailable. Please try again.");
+      }
+    }
+
     return NextResponse.json({
-      ideas: result.object.ideas,
+      ideas: parsedResult.ideas,
       combination,
     });
   } catch (error) {
