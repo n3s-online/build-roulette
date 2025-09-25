@@ -11,7 +11,6 @@ import { getStoredApiKey } from "@/lib/utils";
 
 export default function Home() {
   const [currentCombination, setCurrentCombination] = useState<Combination | null>(null);
-  const [hasApiKey, setHasApiKey] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
   const generateIdeasMutation = useGenerateIdeas();
@@ -43,15 +42,9 @@ export default function Home() {
   };
 
   const handleApiKeyChange = (hasKey: boolean) => {
-    setHasApiKey(hasKey);
     if (hasKey) {
       setShowSettingsDialog(false);
     }
-  };
-
-  const handleSpinAgain = () => {
-    setCurrentCombination(null);
-    generateIdeasMutation.reset();
   };
 
   return (
@@ -120,7 +113,6 @@ export default function Home() {
               <IdeasDisplay
                 ideas={generateIdeasMutation.data.ideas}
                 combination={currentCombination}
-                onSpinAgain={handleSpinAgain}
               />
             </div>
           )}

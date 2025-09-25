@@ -1,68 +1,97 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Lightbulb,
   Zap,
   Code,
   TrendingUp,
-  RotateCcw,
   Copy,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Target,
+  Check
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { GeneratedIdea, Combination } from '@/lib/types'
 
 interface IdeasDisplayProps {
   ideas: GeneratedIdea[]
   combination: Combination
-  onSpinAgain?: () => void
 }
 
 export default function IdeasDisplay({
   ideas,
-  combination,
-  onSpinAgain
+  combination
 }: IdeasDisplayProps) {
   const [expandedIdea, setExpandedIdea] = useState<number | null>(0) // First idea expanded by default
+  const [copiedIdeaIndex, setCopiedIdeaIndex] = useState<number | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to component when it mounts
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, [])
 
   const toggleExpanded = (index: number) => {
     setExpandedIdea(expandedIdea === index ? null : index)
   }
 
-  const copyIdea = (idea: GeneratedIdea) => {
-    const text = `💡 ${idea.name}
+  const copyIdea = (idea: GeneratedIdea, index: number) => {
+    const text = `${idea.name}
 
 ${idea.description}
 
-🚀 Core Features:
+Core Features:
 ${idea.coreFeatures.map(feature => `• ${feature}`).join('\n')}
 
-🛠️ Tech Stack:
+Tech Stack:
 ${idea.suggestedTechStack.map(tech => `• ${tech}`).join('\n')}
 
-📈 Marketing Ideas:
+Marketing Ideas:
 ${idea.leadGenerationIdeas.map(strategy => `• ${strategy}`).join('\n')}
 
-Generated from: ${combination.market} + ${combination.userType} + ${combination.problemType} + ${combination.techStack} (${combination.projectScope})
+Dimensions:
+• Market: ${combination.market}
+• User Type: ${combination.userType}
+• Problem Type: ${combination.problemType}
+• Tech Stack: ${combination.techStack}
+• Project Scope: ${combination.projectScope}
 
 Try BuildRoulette: ${window.location.origin}`
 
     navigator.clipboard.writeText(text).then(() => {
-      // Could add a toast notification here
-      console.log('Idea copied to clipboard!')
+      setCopiedIdeaIndex(index)
+      toast.success('Idea copied to clipboard!', {
+        icon: <Check size={16} className="text-emerald-500" />,
+        duration: 2000,
+      })
+
+      // Reset the button after 2 seconds
+      setTimeout(() => {
+        setCopiedIdeaIndex(null)
+      }, 2000)
     }).catch(err => {
       console.error('Failed to copy:', err)
+      toast.error('Failed to copy idea')
     })
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto space-y-6">
+    <div ref={containerRef} className="max-w-4xl w-full mx-auto space-y-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-white mb-2">
-          🎯 Your AI-Generated Ideas
-        </h2>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <Target className="text-blue-400" size={28} />
+          <h2 className="text-2xl font-bold text-white">
+            Your AI-Generated Ideas
+          </h2>
+        </div>
         <p className="text-gray-400">
           Based on: <span className="text-blue-400">{combination.market}</span> +
           <span className="text-emerald-400"> {combination.userType}</span> +
@@ -109,7 +138,9 @@ Try BuildRoulette: ${window.location.origin}`
             </div>
 
             {/* Expanded Content */}
-            {expandedIdea === index && (
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              expandedIdea === index ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+            }`}>
               <div className="px-6 pb-6 border-t border-gray-800">
                 <div className="grid md:grid-cols-3 gap-6 mt-6">
                   {/* Core Features */}
@@ -166,29 +197,27 @@ Try BuildRoulette: ${window.location.origin}`
                 {/* Copy Button for Individual Idea */}
                 <div className="mt-6 pt-4 border-t border-gray-800">
                   <button
-                    onClick={() => copyIdea(idea)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors hover:bg-emerald-600"
+                    onClick={() => copyIdea(idea, index)}
+                    className={`flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all duration-200 ${
+                      copiedIdeaIndex === index
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-gray-700 hover:bg-gray-600 hover:bg-emerald-600'
+                    }`}
                   >
-                    <Copy size={14} />
-                    Copy Full Idea
+                    {copiedIdeaIndex === index ? (
+                      <Check size={14} className="text-white" />
+                    ) : (
+                      <Copy size={14} />
+                    )}
+                    {copiedIdeaIndex === index ? 'Copied!' : 'Copy Full Idea'}
                   </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Action Button */}
-      <div className="flex justify-center pt-8">
-        <button
-          onClick={onSpinAgain}
-          className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-blue-500/25"
-        >
-          <RotateCcw size={18} />
-          Spin Again
-        </button>
-      </div>
     </div>
   )
 }
