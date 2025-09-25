@@ -50,17 +50,21 @@ export default function SlotMachineReels({
 
     return (
       <div key={label} className="flex flex-col items-center">
-        {/* Column Header */}
-        <div className="mb-6 text-center">
-          <div className="mb-2 flex justify-center text-gray-400">{icon}</div>
-          <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+        {/* Enhanced Column Header */}
+        <div className="mb-8 text-center">
+          <div className="mb-3 flex justify-center">
+            <div className="p-3 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 border border-gray-600 shadow-lg">
+              <div className="text-gray-300">{icon}</div>
+            </div>
+          </div>
+          <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider drop-shadow-sm">
             {label}
           </h3>
         </div>
 
-        {/* Clean Slot Column */}
+        {/* Enhanced Slot Column */}
         <div className="relative">
-          <div className="w-40 h-80 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          <div className="w-44 h-80 bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl border-2 border-gray-600 overflow-hidden shadow-xl">
             {/* Left Arrow - pointing toward column */}
             <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 z-20">
               <ChevronRight
@@ -115,17 +119,26 @@ export default function SlotMachineReels({
                 return (
                   <div
                     key={`${item}-${index}`}
-                    className="h-20 flex items-center justify-center px-2 text-center border-b border-gray-700/50"
-                    style={{ backgroundColor: color }}
+                    className="h-20 flex items-center justify-center px-3 text-center border-b border-gray-700/30 relative overflow-hidden"
+                    style={{
+                      background: `linear-gradient(135deg, ${color}f0 0%, ${color}dd 50%, ${color}cc 100%)`,
+                    }}
                   >
+                    {/* Subtle shine overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+                    {/* Inner card effect */}
+                    <div className="absolute inset-1 bg-gradient-to-br from-white/10 to-transparent rounded-sm" />
+
                     <span
-                      className={`text-white font-medium ${getTextSize(
+                      className={`text-white font-bold ${getTextSize(
                         item
-                      )} ${getLineHeight(item)}`}
+                      )} ${getLineHeight(item)} relative z-10 drop-shadow-lg`}
                       style={{
                         wordBreak: "break-word",
                         hyphens: "auto",
                         lineHeight: item.length > 12 ? "1.2" : "1.3",
+                        textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)',
                       }}
                     >
                       {item}
@@ -142,13 +155,13 @@ export default function SlotMachineReels({
 
   return (
     <div
-      className={`bg-gray-900/50 rounded-2xl p-8 border border-gray-800 transition-all duration-300 ${
+      className={`bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-sm rounded-3xl p-10 border transition-all duration-500 ${
         isSpinning
-          ? "shadow-[0_0_30px_rgba(59,130,246,0.3)] border-blue-500/30"
-          : "shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+          ? "shadow-[0_0_40px_rgba(59,130,246,0.4)] border-blue-400/50 scale-[1.02]"
+          : "shadow-[0_0_25px_rgba(0,0,0,0.6)] border-gray-700/50"
       }`}
     >
-      <div className="flex gap-20 items-start justify-center">
+      <div className="flex gap-12 items-start justify-center">
         {renderColumn(
           dimensionSettings.markets,
           0,
