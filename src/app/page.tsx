@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Shuffle, Search, Lightbulb } from "lucide-react";
+import Image from "next/image";
 import SlotMachine from "@/components/slot-machine";
 import SettingsDialog from "@/components/settings-dialog";
 import IdeasDisplay from "@/components/ideas-display";
@@ -56,12 +58,21 @@ export default function Home() {
           {/* Header with Settings */}
           <div className="flex justify-between items-start mb-16">
             <div className="flex-1 text-center">
-              <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-                BuildRoulette
-              </h1>
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <Image
+                  src="/icon.png"
+                  alt="BuildRoulette Logo"
+                  width={64}
+                  height={64}
+                  className="rounded-lg"
+                />
+                <h1 className="text-4xl sm:text-5xl font-bold text-white">
+                  BuildRoulette
+                </h1>
+              </div>
               <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-                Generate random product combinations to spark your next indie
-                project. Spin to discover new market opportunities.
+                Generate AI-powered product ideas based on real market research.
+                We search the web for current problems, then create solutions.
               </p>
             </div>
             <div className="flex-shrink-0 ml-4">
@@ -116,6 +127,50 @@ export default function Home() {
               />
             </div>
           )}
+        </div>
+
+        {/* How it Works Section */}
+        <div className="max-w-2xl mx-auto mt-20 mb-8 px-4">
+          <div className="bg-gray-900/50 rounded-xl p-8 border border-gray-700/50">
+            <h3 className="text-2xl font-bold text-white mb-6 text-center">
+              How it Works
+            </h3>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-8 text-center">
+              <div className="flex-1">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Shuffle className="text-white" size={24} />
+                </div>
+                <h4 className="font-semibold text-white mb-2">Spin</h4>
+                <p className="text-gray-400 text-sm">
+                  Generate random combinations of markets, users, and tech stacks
+                </p>
+              </div>
+
+              <div className="hidden md:block text-gray-600 text-2xl">→</div>
+
+              <div className="flex-1">
+                <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Search className="text-white" size={24} />
+                </div>
+                <h4 className="font-semibold text-white mb-2">Research</h4>
+                <p className="text-gray-400 text-sm">
+                  We search the web for real problems affecting your target market
+                </p>
+              </div>
+
+              <div className="hidden md:block text-gray-600 text-2xl">→</div>
+
+              <div className="flex-1">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Lightbulb className="text-white" size={24} />
+                </div>
+                <h4 className="font-semibold text-white mb-2">Generate Ideas</h4>
+                <p className="text-gray-400 text-sm">
+                  AI creates solutions perfectly scoped for your timeline
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -12,14 +12,14 @@ export default function FakeLoadingBar({ isLoading, onComplete }: FakeLoadingBar
   const [isVisible, setIsVisible] = useState(false);
 
   const loadingMessages = useMemo(() => [
-    "Researching market trends...",
-    "Analyzing competitor landscape...",
-    "Identifying pain points...",
-    "Generating creative solutions...",
+    "Searching the web for market problems...",
+    "Analyzing current pain points...",
+    "Identifying solution opportunities...",
+    "Generating solution-focused ideas...",
     "Validating product concepts...",
     "Crafting marketing strategies...",
     "Optimizing tech stack selections...",
-    "Finalizing recommendations...",
+    "Finalizing your product concepts...",
   ], []);
 
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
