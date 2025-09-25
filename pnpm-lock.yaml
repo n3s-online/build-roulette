@@ -11,6 +11,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: ^2.0.18
         version: 2.0.18(zod@4.1.11)
+      '@ai-sdk/perplexity':
+        specifier: ^2.0.10
+        version: 2.0.10(zod@4.1.11)
       '@anthropic-ai/sdk':
         specifier: ^0.63.1
         version: 0.63.1(zod@4.1.11)
@@ -110,6 +113,12 @@ packages:
 
   '@ai-sdk/gateway@1.0.28':
     resolution: {integrity: sha512-e9RKgWVDYHsd4UkKCgKQpK+nxLSDydN18yXctzgNlmf2R7BR+HqUsTKJdZT6ArSoXBWBGhyZss0cJJnpm6YVfw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  '@ai-sdk/perplexity@2.0.10':
+    resolution: {integrity: sha512-MexVpPZSAQr+io4jQBMQpHHiK22nouTOp05C6txYkUhuOuA4XjAO7S9XxEbFwGMrNzPChdHsx2315tNGR47G5A==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -2294,6 +2303,12 @@ snapshots:
       zod: 4.1.11
 
   '@ai-sdk/gateway@1.0.28(zod@4.1.11)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.9(zod@4.1.11)
+      zod: 4.1.11
+
+  '@ai-sdk/perplexity@2.0.10(zod@4.1.11)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.9(zod@4.1.11)

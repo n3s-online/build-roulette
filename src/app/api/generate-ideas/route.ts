@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createPerplexity } from "@ai-sdk/perplexity";
 import { z } from "zod";
 
 // Rate limiting and retry utilities
@@ -79,15 +79,13 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const { combination, apiKey } = RequestSchema.parse(body);
 
-    // Create Anthropic client with user's API key
-    const anthropic = createAnthropic({
+    // Create Perplexity client with user's API key via Vercel AI Gateway
+    const perplexity = createPerplexity({
       apiKey: apiKey,
+      baseURL: 'https://ai-gateway.vercel.sh/v1',
     });
 
-    // Optimized single API call with built-in web search capability
-    const webSearchTool = anthropic.tools.webSearch_20250305({ maxUses: 3 }); // Reduced from 5 to 3
-
-    const optimizedPrompt = `You are a product idea generator with web search capabilities. Generate 3 unique, feasible product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
+    const optimizedPrompt = `You are a product idea generator with real-time web search capabilities. Generate 3 unique, feasible product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
 
 PROJECT SCOPE: ${combination.projectScope}
 This is crucial - all ideas must be appropriately scoped for a ${combination.projectScope.toLowerCase()}:
@@ -97,7 +95,7 @@ This is crucial - all ideas must be appropriately scoped for a ${combination.pro
 - 3 Month Project: Complex application with advanced features, integrations, scalability considerations
 - 6 Month Journey: Enterprise-grade solution with comprehensive features, testing, documentation, deployment
 
-TASK: Use web search to quickly identify 2-3 current pain points for ${combination.userType} in ${combination.market}, then generate ideas that address these problems.
+TASK: Research current pain points and trends for ${combination.userType} in ${combination.market} in 2025, then generate ideas that address these problems.
 
 Requirements for each idea:
 - Name: Catchy, memorable product name
@@ -106,7 +104,7 @@ Requirements for each idea:
 - Tech Stack: 3-5 technologies (must include ${combination.techStack}) suitable for the project scope
 - Marketing: 3-4 lead generation strategies realistic for an indie developer in this timeframe
 
-Make ideas unique, feasible for solo developers, properly scoped for ${combination.projectScope.toLowerCase()}, based on real market research.
+Make ideas unique, feasible for solo developers, properly scoped for ${combination.projectScope.toLowerCase()}, based on real 2025 market research.
 
 Return ONLY valid JSON matching this exact structure:
 {
@@ -121,12 +119,16 @@ Return ONLY valid JSON matching this exact structure:
   ]
 }`;
 
-    // Single API call with retry logic and web search
+    // Single API call with retry logic using Perplexity's built-in web search
     const result = await withRetry(async () => {
       return await generateText({
-        model: anthropic("claude-sonnet-4-20250514"),
-        prompt: optimizedPrompt,
-        tools: { web_search: webSearchTool },
+        model: perplexity("perplexity/sonar-pro"),
+        messages: [
+          {
+            role: "user",
+            content: optimizedPrompt,
+          },
+        ],
         temperature: 0.8,
       });
     });
@@ -161,12 +163,15 @@ Return ONLY valid JSON matching this exact structure:
       console.error("Failed to parse AI response:", parseError);
       console.error("Raw AI response:", result.text.substring(0, 500) + "...");
 
-      // Fallback: generate basic ideas without web search
+      // Fallback: generate basic ideas with simpler prompt
       console.log("Falling back to basic idea generation...");
       const fallbackResult = await withRetry(async () => {
         return await generateText({
-          model: anthropic("claude-sonnet-4-20250514"),
-          prompt: `Generate exactly 3 product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
+          model: perplexity("perplexity/sonar-pro"),
+          messages: [
+            {
+              role: "user",
+              content: `Generate exactly 3 product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
 
 Return ONLY valid JSON in this exact format (no extra text, no markdown, no explanations):
 {
@@ -194,6 +199,8 @@ Return ONLY valid JSON in this exact format (no extra text, no markdown, no expl
     }
   ]
 }`,
+            },
+          ],
           temperature: 0.3,
         });
       });
@@ -249,7 +256,7 @@ Return ONLY valid JSON in this exact format (no extra text, no markdown, no expl
         return NextResponse.json(
           {
             error:
-              "Invalid API key. Please check your Anthropic API key in settings.",
+              "Invalid API key. Please check your Vercel AI Gateway API key in settings.",
           },
           { status: 401 }
         );

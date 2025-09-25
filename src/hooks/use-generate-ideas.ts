@@ -1,22 +1,32 @@
 import { useMutation } from '@tanstack/react-query';
 import { Combination, IdeaGenerationResponse, IdeaGenerationError } from '@/lib/types';
-import { createAIService } from '@/lib/ai-service';
-import { getStoredApiKey } from '@/lib/utils';
 
 interface GenerateIdeasParams {
   combination: Combination;
-  apiKey?: string;
+  apiKey: string;
 }
 
 const generateIdeas = async ({ combination, apiKey }: GenerateIdeasParams): Promise<IdeaGenerationResponse> => {
-  const key = apiKey || getStoredApiKey();
+  const response = await fetch('/api/generate-ideas', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ combination, apiKey }),
+  });
 
-  if (!key) {
-    throw new Error('API key is required');
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const error: IdeaGenerationError = {
+      code: response.status === 401 ? 'INVALID_API_KEY'
+           : response.status === 429 ? 'RATE_LIMIT'
+           : 'API_ERROR',
+      message: errorData.error || `HTTP ${response.status}`,
+    };
+    throw error;
   }
 
-  const aiService = createAIService(key);
-  return aiService.generateIdeas(combination);
+  return response.json();
 };
 
 export const useGenerateIdeas = () => {

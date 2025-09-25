@@ -153,7 +153,7 @@ export default function SettingsDialog({
         <DialogHeader>
           <DialogTitle className="text-white">Settings</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Configure your API key and customize which options appear in the slot machine.
+            Configure your Vercel AI Gateway API key and customize which options appear in the slot machine.
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="api" className="w-full">
@@ -165,7 +165,7 @@ export default function SettingsDialog({
           <TabsContent value="api" className="space-y-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="api-key" className="text-gray-300">
-                Anthropic API Key
+                Vercel AI Gateway API Key
               </Label>
               <div className="relative">
                 <Input
@@ -173,7 +173,7 @@ export default function SettingsDialog({
                   type={showApiKey ? "text" : "password"}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-ant-..."
+                  placeholder="your-vercel-ai-gateway-key"
                   className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 pr-10"
                 />
                 <Button
@@ -190,12 +190,12 @@ export default function SettingsDialog({
             <div className="text-xs text-gray-500">
               Get your API key from{" "}
               <a
-                href="https://console.anthropic.com/"
+                href="https://vercel.com/ai-gateway"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 underline"
               >
-                console.anthropic.com
+                Vercel AI Gateway
               </a>
             </div>
             <div className="flex gap-2 pt-2">
