@@ -2,7 +2,10 @@
 
 import { Briefcase, Users, Target, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { Market, UserType, ProblemType, TechStack } from "@/lib/types";
+import type { DimensionSettings } from "@/lib/utils";
 
+// These constants are now only used internally by this component
+// The actual data comes from dimensionSettings prop
 const MARKETS: Market[] = [
   "SaaS", "E-commerce", "FinTech", "HealthTech", "EdTech", "Gaming",
   "Creator Economy", "Real Estate", "Travel", "Food & Beverage", "Fitness", "Productivity",
@@ -26,12 +29,14 @@ interface SlotMachineReelsProps {
   columnPositions: number[];
   columnDurations: number[];
   isSpinning: boolean;
+  dimensionSettings: DimensionSettings;
 }
 
 export default function SlotMachineReels({
   columnPositions,
   columnDurations,
   isSpinning,
+  dimensionSettings,
 }: SlotMachineReelsProps) {
   const renderColumn = (
     data: readonly string[],
@@ -145,28 +150,28 @@ export default function SlotMachineReels({
     >
       <div className="flex gap-20 items-start justify-center">
         {renderColumn(
-          MARKETS,
+          dimensionSettings.markets,
           0,
           "rgb(59 130 246)",
           "Market",
           <Briefcase size={20} />
         )}
         {renderColumn(
-          USER_TYPES,
+          dimensionSettings.userTypes,
           1,
           "rgb(16 185 129)",
           "User Type",
           <Users size={20} />
         )}
         {renderColumn(
-          PROBLEM_TYPES,
+          dimensionSettings.problemTypes,
           2,
           "rgb(245 158 11)",
           "Problem",
           <Target size={20} />
         )}
         {renderColumn(
-          TECH_STACKS,
+          dimensionSettings.techStacks,
           3,
           "rgb(139 92 246)",
           "Tech Stack",

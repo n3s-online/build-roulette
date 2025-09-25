@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Eye, EyeOff } from "lucide-react";
+import { Settings, Eye, EyeOff, Briefcase, Users, Target, Zap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,16 +13,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getStoredApiKey, storeApiKey, removeStoredApiKey } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  getStoredApiKey,
+  storeApiKey,
+  removeStoredApiKey,
+  getStoredDimensionSettings,
+  storeDimensionSettings,
+  DEFAULT_DIMENSION_SETTINGS,
+  type DimensionSettings
+} from "@/lib/utils";
 
 interface SettingsDialogProps {
   onApiKeyChange?: (hasKey: boolean) => void;
+  onDimensionSettingsChange?: (settings: DimensionSettings) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
 export default function SettingsDialog({
   onApiKeyChange,
+  onDimensionSettingsChange,
   open,
   onOpenChange,
 }: SettingsDialogProps) {
@@ -30,6 +43,7 @@ export default function SettingsDialog({
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [hasStoredKey, setHasStoredKey] = useState(false);
+  const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(DEFAULT_DIMENSION_SETTINGS);
 
   useEffect(() => {
     const storedKey = getStoredApiKey();
@@ -38,8 +52,13 @@ export default function SettingsDialog({
       setHasStoredKey(true);
       onApiKeyChange?.(true);
     }
+
+    // Load dimension settings
+    const storedDimensionSettings = getStoredDimensionSettings();
+    setDimensionSettings(storedDimensionSettings);
+    onDimensionSettingsChange?.(storedDimensionSettings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Intentionally exclude onApiKeyChange to prevent infinite loops on mount
+  }, []); // Intentionally exclude callbacks to prevent infinite loops on mount
 
   // Separate effect to notify parent when the callback function changes
   useEffect(() => {
@@ -47,6 +66,11 @@ export default function SettingsDialog({
       onApiKeyChange?.(true);
     }
   }, [onApiKeyChange, hasStoredKey]);
+
+  // Effect to notify parent when dimension settings change
+  useEffect(() => {
+    onDimensionSettingsChange?.(dimensionSettings);
+  }, [dimensionSettings, onDimensionSettingsChange]);
 
   const handleSave = () => {
     if (apiKey.trim()) {
@@ -72,11 +96,43 @@ export default function SettingsDialog({
     // Reset to stored key if canceling
     const storedKey = getStoredApiKey();
     setApiKey(storedKey || "");
+
+    // Reset dimension settings
+    const storedDimensionSettings = getStoredDimensionSettings();
+    setDimensionSettings(storedDimensionSettings);
+
     if (onOpenChange) {
       onOpenChange(false);
     } else {
       setIsOpen(false);
     }
+  };
+
+  const handleDimensionToggle = (dimension: keyof DimensionSettings, value: string) => {
+    setDimensionSettings(prev => {
+      const currentArray = prev[dimension] as string[];
+      const newArray = currentArray.includes(value)
+        ? currentArray.filter(item => item !== value)
+        : [...currentArray, value];
+
+      // Prevent having zero selections
+      if (newArray.length === 0) {
+        return prev;
+      }
+
+      const updated = { ...prev, [dimension]: newArray } as DimensionSettings;
+      storeDimensionSettings(updated);
+      // Don't call onDimensionSettingsChange during render - use useEffect instead
+      return updated;
+    });
+  };
+
+  const handleSelectAll = (dimension: keyof DimensionSettings) => {
+    const allOptions = DEFAULT_DIMENSION_SETTINGS[dimension] as string[];
+    const updated = { ...dimensionSettings, [dimension]: [...allOptions] } as DimensionSettings;
+    setDimensionSettings(updated);
+    storeDimensionSettings(updated);
+    // Don't call onDimensionSettingsChange during render - use useEffect instead
   };
 
   return (
@@ -93,76 +149,244 @@ export default function SettingsDialog({
           <Settings size={16} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700">
+      <DialogContent className="sm:max-w-2xl bg-gray-900 border-gray-700">
         <DialogHeader>
-          <DialogTitle className="text-white">API Settings</DialogTitle>
+          <DialogTitle className="text-white">Settings</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Enter your Anthropic API key to generate AI-powered product ideas.
-            Your key is stored locally in your browser.
+            Configure your API key and customize which options appear in the slot machine.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="api-key" className="text-gray-300">
-              Anthropic API Key
-            </Label>
-            <div className="relative">
-              <Input
-                id="api-key"
-                type={showApiKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-..."
-                className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 pr-10"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-300"
-                onClick={() => setShowApiKey(!showApiKey)}
+        <Tabs defaultValue="api" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-700 border border-gray-600">
+            <TabsTrigger value="api" className="text-gray-300 data-[state=active]:bg-gray-600 data-[state=active]:text-white">API Key</TabsTrigger>
+            <TabsTrigger value="dimensions" className="text-gray-300 data-[state=active]:bg-gray-600 data-[state=active]:text-white">Slot Options</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="api" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="api-key" className="text-gray-300">
+                Anthropic API Key
+              </Label>
+              <div className="relative">
+                <Input
+                  id="api-key"
+                  type={showApiKey ? "text" : "password"}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="sk-ant-..."
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-300"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                </Button>
+              </div>
+            </div>
+            <div className="text-xs text-gray-500">
+              Get your API key from{" "}
+              <a
+                href="https://console.anthropic.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline"
               >
-                {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                console.anthropic.com
+              </a>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={handleSave}
+                disabled={!apiKey.trim()}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Save
+              </Button>
+              {hasStoredKey && (
+                <Button
+                  onClick={handleRemove}
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Remove
+                </Button>
+              )}
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                className="bg-gray-700 border-gray-500 text-white hover:bg-gray-600 hover:border-gray-400"
+              >
+                Cancel
               </Button>
             </div>
-          </div>
-          <div className="text-xs text-gray-500">
-            Get your API key from{" "}
-            <a
-              href="https://console.anthropic.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 underline"
-            >
-              console.anthropic.com
-            </a>
-          </div>
-          <div className="flex gap-2 pt-2">
-            <Button
-              onClick={handleSave}
-              disabled={!apiKey.trim()}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              Save
-            </Button>
-            {hasStoredKey && (
-              <Button
-                onClick={handleRemove}
-                variant="destructive"
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Remove
-              </Button>
-            )}
-            <Button
-              onClick={handleCancel}
-              variant="outline"
-              className="bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="dimensions" className="space-y-4 mt-4">
+            <div className="text-sm text-gray-400 mb-4">
+              Toggle which options can appear in the slot machine. At least one option must be selected for each dimension.
+            </div>
+
+            <ScrollArea className="h-96">
+              <div className="space-y-6 pr-4">
+                {/* Markets */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Briefcase size={16} className="text-blue-400" />
+                      <Label className="text-gray-300 font-medium">Markets ({dimensionSettings.markets.length})</Label>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleSelectAll('markets')}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs bg-gray-700 border-gray-500 text-white hover:bg-gray-600 hover:border-gray-400"
+                      >
+                        Select All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DEFAULT_DIMENSION_SETTINGS.markets.map((market) => (
+                      <div key={market} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`market-${market}`}
+                          checked={dimensionSettings.markets.includes(market)}
+                          onCheckedChange={() => handleDimensionToggle('markets', market)}
+                          className="border-gray-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 data-[state=checked]:text-white"
+                        />
+                        <Label
+                          htmlFor={`market-${market}`}
+                          className="text-sm text-gray-300 cursor-pointer"
+                        >
+                          {market}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* User Types */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users size={16} className="text-emerald-400" />
+                      <Label className="text-gray-300 font-medium">User Types ({dimensionSettings.userTypes.length})</Label>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleSelectAll('userTypes')}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs bg-gray-700 border-gray-500 text-white hover:bg-gray-600 hover:border-gray-400"
+                      >
+                        Select All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DEFAULT_DIMENSION_SETTINGS.userTypes.map((userType) => (
+                      <div key={userType} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`userType-${userType}`}
+                          checked={dimensionSettings.userTypes.includes(userType)}
+                          onCheckedChange={() => handleDimensionToggle('userTypes', userType)}
+                          className="border-gray-500 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:text-white"
+                        />
+                        <Label
+                          htmlFor={`userType-${userType}`}
+                          className="text-sm text-gray-300 cursor-pointer"
+                        >
+                          {userType}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Problem Types */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Target size={16} className="text-amber-400" />
+                      <Label className="text-gray-300 font-medium">Problem Types ({dimensionSettings.problemTypes.length})</Label>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleSelectAll('problemTypes')}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs bg-gray-700 border-gray-500 text-white hover:bg-gray-600 hover:border-gray-400"
+                      >
+                        Select All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DEFAULT_DIMENSION_SETTINGS.problemTypes.map((problemType) => (
+                      <div key={problemType} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`problemType-${problemType}`}
+                          checked={dimensionSettings.problemTypes.includes(problemType)}
+                          onCheckedChange={() => handleDimensionToggle('problemTypes', problemType)}
+                          className="border-gray-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-white"
+                        />
+                        <Label
+                          htmlFor={`problemType-${problemType}`}
+                          className="text-sm text-gray-300 cursor-pointer"
+                        >
+                          {problemType}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tech Stacks */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap size={16} className="text-purple-400" />
+                      <Label className="text-gray-300 font-medium">Tech Stacks ({dimensionSettings.techStacks.length})</Label>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleSelectAll('techStacks')}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs bg-gray-700 border-gray-500 text-white hover:bg-gray-600 hover:border-gray-400"
+                      >
+                        Select All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DEFAULT_DIMENSION_SETTINGS.techStacks.map((techStack) => (
+                      <div key={techStack} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`techStack-${techStack}`}
+                          checked={dimensionSettings.techStacks.includes(techStack)}
+                          onCheckedChange={() => handleDimensionToggle('techStacks', techStack)}
+                          className="border-gray-500 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 data-[state=checked]:text-white"
+                        />
+                        <Label
+                          htmlFor={`techStack-${techStack}`}
+                          className="text-sm text-gray-300 cursor-pointer"
+                        >
+                          {techStack}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

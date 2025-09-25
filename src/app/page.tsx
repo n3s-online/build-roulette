@@ -9,11 +9,12 @@ import IdeasDisplay from "@/components/ideas-display";
 import FakeLoadingBar from "@/components/fake-loading-bar";
 import { Combination } from "@/lib/types";
 import { useGenerateIdeas } from "@/hooks/use-generate-ideas";
-import { getStoredApiKey } from "@/lib/utils";
+import { getStoredApiKey, type DimensionSettings, DEFAULT_DIMENSION_SETTINGS } from "@/lib/utils";
 
 export default function Home() {
   const [currentCombination, setCurrentCombination] = useState<Combination | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(DEFAULT_DIMENSION_SETTINGS);
 
   const generateIdeasMutation = useGenerateIdeas();
 
@@ -49,6 +50,10 @@ export default function Home() {
     }
   }, []);
 
+  const handleDimensionSettingsChange = useCallback((settings: DimensionSettings) => {
+    setDimensionSettings(settings);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-950">
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900/50 via-transparent to-blue-900/20 pointer-events-none"></div>
@@ -78,6 +83,7 @@ export default function Home() {
             <div className="flex-shrink-0 ml-4">
               <SettingsDialog
                 onApiKeyChange={handleApiKeyChange}
+                onDimensionSettingsChange={handleDimensionSettingsChange}
                 open={showSettingsDialog}
                 onOpenChange={setShowSettingsDialog}
               />
@@ -89,6 +95,7 @@ export default function Home() {
             <SlotMachine
               onResult={handleSpinResult}
               onGenerateIdeas={handleGenerateIdeas}
+              dimensionSettings={dimensionSettings}
             />
           </div>
 

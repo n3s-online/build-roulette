@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Lightbulb } from "lucide-react";
-import SlotMachineReels, { MARKETS, USER_TYPES, PROBLEM_TYPES, TECH_STACKS } from "./slot-machine-reels";
+import SlotMachineReels from "./slot-machine-reels";
 import ProjectScopeSelector from "./project-scope-slider";
 import CombinationResults from "./combination-results";
 
@@ -17,15 +17,18 @@ export type {
 } from "@/lib/types";
 
 import type { Combination, ProjectScope } from "@/lib/types";
+import type { DimensionSettings } from "@/lib/utils";
 
 interface SlotMachineProps {
   onResult?: (combination: Combination) => void;
   onGenerateIdeas?: (combination: Combination) => void;
+  dimensionSettings: DimensionSettings;
 }
 
 export default function SlotMachine({
   onResult,
   onGenerateIdeas,
+  dimensionSettings,
 }: SlotMachineProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<Combination | null>(null);
@@ -35,13 +38,13 @@ export default function SlotMachine({
 
   const generateRandomResult = useCallback((): Combination => {
     return {
-      market: MARKETS[Math.floor(Math.random() * MARKETS.length)]!,
-      userType: USER_TYPES[Math.floor(Math.random() * USER_TYPES.length)]!,
-      problemType: PROBLEM_TYPES[Math.floor(Math.random() * PROBLEM_TYPES.length)]!,
-      techStack: TECH_STACKS[Math.floor(Math.random() * TECH_STACKS.length)]!,
+      market: dimensionSettings.markets[Math.floor(Math.random() * dimensionSettings.markets.length)]!,
+      userType: dimensionSettings.userTypes[Math.floor(Math.random() * dimensionSettings.userTypes.length)]!,
+      problemType: dimensionSettings.problemTypes[Math.floor(Math.random() * dimensionSettings.problemTypes.length)]!,
+      techStack: dimensionSettings.techStacks[Math.floor(Math.random() * dimensionSettings.techStacks.length)]!,
       projectScope,
     };
-  }, [projectScope]);
+  }, [projectScope, dimensionSettings]);
 
   const spin = useCallback(() => {
     if (isSpinning) return;
@@ -53,7 +56,12 @@ export default function SlotMachine({
     const newResult = generateRandomResult();
     console.log("🎯 Target results:", newResult);
 
-    const columns = [MARKETS, USER_TYPES, PROBLEM_TYPES, TECH_STACKS];
+    const columns = [
+      dimensionSettings.markets,
+      dimensionSettings.userTypes,
+      dimensionSettings.problemTypes,
+      dimensionSettings.techStacks
+    ];
     const targetValues = [
       newResult.market,
       newResult.userType,
@@ -90,7 +98,7 @@ export default function SlotMachine({
       setIsSpinning(false);
       onResult?.(newResult);
     }, longestDuration + 500);
-  }, [isSpinning, generateRandomResult, onResult]);
+  }, [isSpinning, generateRandomResult, onResult, dimensionSettings]);
 
 
   return (
@@ -100,6 +108,7 @@ export default function SlotMachine({
         columnPositions={columnPositions}
         columnDurations={columnDurations}
         isSpinning={isSpinning}
+        dimensionSettings={dimensionSettings}
       />
 
       {/* Spin Button - only show when no results */}
