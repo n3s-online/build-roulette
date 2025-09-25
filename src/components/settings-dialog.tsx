@@ -38,7 +38,15 @@ export default function SettingsDialog({
       setHasStoredKey(true);
       onApiKeyChange?.(true);
     }
-  }, [onApiKeyChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally exclude onApiKeyChange to prevent infinite loops on mount
+
+  // Separate effect to notify parent when the callback function changes
+  useEffect(() => {
+    if (hasStoredKey) {
+      onApiKeyChange?.(true);
+    }
+  }, [onApiKeyChange, hasStoredKey]);
 
   const handleSave = () => {
     if (apiKey.trim()) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Shuffle, Search, Lightbulb } from "lucide-react";
 import Image from "next/image";
 import SlotMachine from "@/components/slot-machine";
@@ -43,11 +43,11 @@ export default function Home() {
     );
   };
 
-  const handleApiKeyChange = (hasKey: boolean) => {
+  const handleApiKeyChange = useCallback((hasKey: boolean) => {
     if (hasKey) {
       setShowSettingsDialog(false);
     }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950">
