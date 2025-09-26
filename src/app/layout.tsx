@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { Metadata } from "next";
+import PlausibleProvider from "next-plausible";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -35,9 +36,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Providers>{children}</Providers>
-      </body>
+      <PlausibleProvider
+        domain="build.willness.dev"
+        customDomain="https://plausible-analytics-ce-production-d9c9.up.railway.app"
+      >
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <Providers>{children}</Providers>
+        </body>
+      </PlausibleProvider>
     </html>
   );
 }
