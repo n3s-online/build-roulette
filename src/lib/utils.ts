@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // API Key management utilities
-const API_KEY_STORAGE_KEY = "anthropic-api-key";
+const API_KEY_STORAGE_KEY = "vercel-ai-gateway-api-key";
 
 export function getStoredApiKey(): string | null {
   if (typeof window === "undefined") return null;
@@ -21,6 +21,25 @@ export function storeApiKey(apiKey: string): void {
 export function removeStoredApiKey(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(API_KEY_STORAGE_KEY);
+}
+
+// Model selection utilities
+const MODEL_SELECTION_KEY = "perplexity-model-selection";
+export type PerplexityModel = "sonar-reasoning" | "sonar-reasoning-pro";
+const DEFAULT_MODEL: PerplexityModel = "sonar-reasoning-pro";
+
+export function getStoredModel(): PerplexityModel {
+  if (typeof window === "undefined") return DEFAULT_MODEL;
+  const stored = localStorage.getItem(MODEL_SELECTION_KEY);
+  if (stored === "sonar-reasoning" || stored === "sonar-reasoning-pro") {
+    return stored;
+  }
+  return DEFAULT_MODEL;
+}
+
+export function storeModel(model: PerplexityModel): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(MODEL_SELECTION_KEY, model);
 }
 
 // Dimension Settings management

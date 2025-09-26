@@ -9,12 +9,13 @@ import IdeasDisplay from "@/components/ideas-display";
 import FakeLoadingBar from "@/components/fake-loading-bar";
 import { Combination } from "@/lib/types";
 import { useGenerateIdeas } from "@/hooks/use-generate-ideas";
-import { getStoredApiKey, type DimensionSettings, DEFAULT_DIMENSION_SETTINGS } from "@/lib/utils";
+import { getStoredApiKey, type DimensionSettings, DEFAULT_DIMENSION_SETTINGS, type PerplexityModel } from "@/lib/utils";
 
 export default function Home() {
   const [currentCombination, setCurrentCombination] = useState<Combination | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(DEFAULT_DIMENSION_SETTINGS);
+  const [selectedModel, setSelectedModel] = useState<PerplexityModel>("sonar-reasoning-pro");
 
   const generateIdeasMutation = useGenerateIdeas();
 
@@ -32,7 +33,7 @@ export default function Home() {
     }
 
     generateIdeasMutation.mutate(
-      { combination, apiKey },
+      { combination, apiKey, model: selectedModel },
       {
         onError: (error) => {
           // If it's an API key error, show settings dialog
@@ -52,6 +53,10 @@ export default function Home() {
 
   const handleDimensionSettingsChange = useCallback((settings: DimensionSettings) => {
     setDimensionSettings(settings);
+  }, []);
+
+  const handleModelChange = useCallback((model: PerplexityModel) => {
+    setSelectedModel(model);
   }, []);
 
   return (
@@ -84,6 +89,7 @@ export default function Home() {
               <SettingsDialog
                 onApiKeyChange={handleApiKeyChange}
                 onDimensionSettingsChange={handleDimensionSettingsChange}
+                onModelChange={handleModelChange}
                 open={showSettingsDialog}
                 onOpenChange={setShowSettingsDialog}
               />

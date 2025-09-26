@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   getStoredApiKey,
   storeApiKey,
@@ -23,12 +24,16 @@ import {
   getStoredDimensionSettings,
   storeDimensionSettings,
   DEFAULT_DIMENSION_SETTINGS,
-  type DimensionSettings
+  getStoredModel,
+  storeModel,
+  type DimensionSettings,
+  type PerplexityModel
 } from "@/lib/utils";
 
 interface SettingsDialogProps {
   onApiKeyChange?: (hasKey: boolean) => void;
   onDimensionSettingsChange?: (settings: DimensionSettings) => void;
+  onModelChange?: (model: PerplexityModel) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -36,6 +41,7 @@ interface SettingsDialogProps {
 export default function SettingsDialog({
   onApiKeyChange,
   onDimensionSettingsChange,
+  onModelChange,
   open,
   onOpenChange,
 }: SettingsDialogProps) {
@@ -44,6 +50,7 @@ export default function SettingsDialog({
   const [showApiKey, setShowApiKey] = useState(false);
   const [hasStoredKey, setHasStoredKey] = useState(false);
   const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(DEFAULT_DIMENSION_SETTINGS);
+  const [selectedModel, setSelectedModel] = useState<PerplexityModel>("sonar-reasoning-pro");
 
   useEffect(() => {
     const storedKey = getStoredApiKey();
@@ -57,6 +64,11 @@ export default function SettingsDialog({
     const storedDimensionSettings = getStoredDimensionSettings();
     setDimensionSettings(storedDimensionSettings);
     onDimensionSettingsChange?.(storedDimensionSettings);
+
+    // Load model selection
+    const storedModel = getStoredModel();
+    setSelectedModel(storedModel);
+    onModelChange?.(storedModel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Intentionally exclude callbacks to prevent infinite loops on mount
 
@@ -101,11 +113,21 @@ export default function SettingsDialog({
     const storedDimensionSettings = getStoredDimensionSettings();
     setDimensionSettings(storedDimensionSettings);
 
+    // Reset model selection
+    const storedModel = getStoredModel();
+    setSelectedModel(storedModel);
+
     if (onOpenChange) {
       onOpenChange(false);
     } else {
       setIsOpen(false);
     }
+  };
+
+  const handleModelChange = (model: PerplexityModel) => {
+    setSelectedModel(model);
+    storeModel(model);
+    onModelChange?.(model);
   };
 
   const handleDimensionToggle = (dimension: keyof DimensionSettings, value: string) => {
@@ -198,6 +220,38 @@ export default function SettingsDialog({
                 Vercel AI Gateway
               </a>
             </div>
+
+            {/* Model Selection */}
+            <div className="space-y-3 pt-4 border-t border-gray-700">
+              <Label className="text-gray-300 text-sm font-medium">AI Model</Label>
+              <RadioGroup
+                value={selectedModel}
+                onValueChange={(value) => handleModelChange(value as PerplexityModel)}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="sonar-reasoning"
+                    id="sonar-reasoning"
+                    className="border-gray-500 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
+                  />
+                  <Label htmlFor="sonar-reasoning" className="text-sm text-gray-300 cursor-pointer">
+                    Sonar Reasoning - Faster, cost-effective
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="sonar-reasoning-pro"
+                    id="sonar-reasoning-pro"
+                    className="border-gray-500 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
+                  />
+                  <Label htmlFor="sonar-reasoning-pro" className="text-sm text-gray-300 cursor-pointer">
+                    Sonar Reasoning Pro - Advanced reasoning, better quality (Default)
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             <div className="flex gap-2 pt-2">
               <Button
                 onClick={handleSave}

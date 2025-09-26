@@ -1,18 +1,20 @@
 import { useMutation } from '@tanstack/react-query';
 import { Combination, IdeaGenerationResponse, IdeaGenerationError } from '@/lib/types';
+import { PerplexityModel } from '@/lib/utils';
 
 interface GenerateIdeasParams {
   combination: Combination;
   apiKey: string;
+  model: PerplexityModel;
 }
 
-const generateIdeas = async ({ combination, apiKey }: GenerateIdeasParams): Promise<IdeaGenerationResponse> => {
+const generateIdeas = async ({ combination, apiKey, model }: GenerateIdeasParams): Promise<IdeaGenerationResponse> => {
   const response = await fetch('/api/generate-ideas', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ combination, apiKey }),
+    body: JSON.stringify({ combination, apiKey, model }),
   });
 
   if (!response.ok) {

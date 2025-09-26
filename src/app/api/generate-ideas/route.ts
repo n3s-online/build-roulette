@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText } from "ai";
+import { generateText, generateObject } from "ai";
 import { createPerplexity } from "@ai-sdk/perplexity";
+import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
 // Rate limiting and retry utilities
@@ -70,6 +71,7 @@ const RequestSchema = z.object({
     projectScope: z.string(),
   }),
   apiKey: z.string().min(1, "API key is required"),
+  model: z.enum(["sonar-reasoning", "sonar-reasoning-pro"]).default("sonar-reasoning-pro"),
 });
 
 export async function POST(request: NextRequest) {
@@ -77,10 +79,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body
-    const { combination, apiKey } = RequestSchema.parse(body);
+    const { combination, apiKey, model } = RequestSchema.parse(body);
 
     // Create Perplexity client with user's API key via Vercel AI Gateway
     const perplexity = createPerplexity({
+      apiKey: apiKey,
+      baseURL: 'https://ai-gateway.vercel.sh/v1',
+    });
+
+    // Create OpenAI client for JSON parsing
+    const openai = createOpenAI({
       apiKey: apiKey,
       baseURL: 'https://ai-gateway.vercel.sh/v1',
     });
@@ -119,10 +127,10 @@ Return ONLY valid JSON matching this exact structure:
   ]
 }`;
 
-    // Single API call with retry logic using Perplexity's built-in web search
-    const result = await withRetry(async () => {
+    // Step 1: Get reasoning response from Perplexity
+    const perplexityResult = await withRetry(async () => {
       return await generateText({
-        model: perplexity("perplexity/sonar-pro"),
+        model: perplexity(`perplexity/${model}`),
         messages: [
           {
             role: "user",
@@ -133,104 +141,37 @@ Return ONLY valid JSON matching this exact structure:
       });
     });
 
-    // Parse the JSON response with better error handling
-    let parsedResult;
-    try {
-      // Clean the response text - remove any markdown formatting
-      let cleanText = result.text.trim();
+    console.log("Perplexity reasoning response received:", perplexityResult.text.substring(0, 200) + "...");
 
-      // If response is wrapped in markdown code blocks, extract the JSON
-      const jsonMatch = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (jsonMatch && jsonMatch[1]) {
-        cleanText = jsonMatch[1].trim();
-      }
+    // Step 2: Parse structured JSON from the reasoning response using GPT-4o
+    const parsedResult = await withRetry(async () => {
+      return await generateObject({
+        model: openai("openai/gpt-4o"),
+        messages: [
+          {
+            role: "user",
+            content: `Extract and format the 3 product ideas from the following reasoning response into the exact JSON structure requested. If the reasoning response contains ideas that don't perfectly match the structure, adapt them appropriately while preserving the core concepts and insights.
 
-      // Remove any leading/trailing non-JSON content
-      const jsonStart = cleanText.indexOf('{');
-      const jsonEnd = cleanText.lastIndexOf('}');
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
-      }
+REASONING RESPONSE:
+${perplexityResult.text}
 
-      console.log("Attempting to parse AI response:", cleanText.substring(0, 200) + "...");
-      parsedResult = JSON.parse(cleanText);
+Extract exactly 3 ideas and format them as valid JSON with this structure:
+- name: catchy product name
+- description: clear 1-2 sentence description
+- coreFeatures: array of 3-5 specific features
+- suggestedTechStack: array of 3-5 technologies (must include ${combination.techStack})
+- leadGenerationIdeas: array of 3-4 marketing strategies
 
-      // Validate with Zod
-      const validatedResult = IdeaGenerationSchema.parse(parsedResult);
-      parsedResult = validatedResult;
-
-    } catch (parseError) {
-      console.error("Failed to parse AI response:", parseError);
-      console.error("Raw AI response:", result.text.substring(0, 500) + "...");
-
-      // Fallback: generate basic ideas with simpler prompt
-      console.log("Falling back to basic idea generation...");
-      const fallbackResult = await withRetry(async () => {
-        return await generateText({
-          model: perplexity("perplexity/sonar-pro"),
-          messages: [
-            {
-              role: "user",
-              content: `Generate exactly 3 product ideas for ${combination.userType} in ${combination.market} that solve ${combination.problemType} problems using ${combination.techStack}.
-
-Return ONLY valid JSON in this exact format (no extra text, no markdown, no explanations):
-{
-  "ideas": [
-    {
-      "name": "Product Name 1",
-      "description": "Brief description addressing a real problem",
-      "coreFeatures": ["Feature 1", "Feature 2", "Feature 3"],
-      "suggestedTechStack": ["${combination.techStack}", "Tech 2", "Tech 3"],
-      "leadGenerationIdeas": ["Marketing 1", "Marketing 2", "Marketing 3"]
-    },
-    {
-      "name": "Product Name 2",
-      "description": "Brief description addressing a real problem",
-      "coreFeatures": ["Feature 1", "Feature 2", "Feature 3"],
-      "suggestedTechStack": ["${combination.techStack}", "Tech 2", "Tech 3"],
-      "leadGenerationIdeas": ["Marketing 1", "Marketing 2", "Marketing 3"]
-    },
-    {
-      "name": "Product Name 3",
-      "description": "Brief description addressing a real problem",
-      "coreFeatures": ["Feature 1", "Feature 2", "Feature 3"],
-      "suggestedTechStack": ["${combination.techStack}", "Tech 2", "Tech 3"],
-      "leadGenerationIdeas": ["Marketing 1", "Marketing 2", "Marketing 3"]
-    }
-  ]
-}`,
-            },
-          ],
-          temperature: 0.3,
-        });
+Return only the structured JSON, no explanations or markdown.`,
+          },
+        ],
+        schema: IdeaGenerationSchema,
+        temperature: 0.1,
       });
-
-      try {
-        let fallbackText = fallbackResult.text.trim();
-        const fallbackMatch = fallbackText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (fallbackMatch && fallbackMatch[1]) {
-          fallbackText = fallbackMatch[1].trim();
-        }
-
-        const fallbackStart = fallbackText.indexOf('{');
-        const fallbackEnd = fallbackText.lastIndexOf('}');
-        if (fallbackStart !== -1 && fallbackEnd !== -1) {
-          fallbackText = fallbackText.substring(fallbackStart, fallbackEnd + 1);
-        }
-
-        parsedResult = JSON.parse(fallbackText);
-        const validatedFallback = IdeaGenerationSchema.parse(parsedResult);
-        parsedResult = validatedFallback;
-        console.log("Fallback generation successful");
-
-      } catch (fallbackError) {
-        console.error("Fallback also failed:", fallbackError);
-        throw new Error("AI service temporarily unavailable. Please try again.");
-      }
-    }
+    });
 
     return NextResponse.json({
-      ideas: parsedResult.ideas,
+      ideas: parsedResult.object.ideas,
       combination,
     });
   } catch (error) {
