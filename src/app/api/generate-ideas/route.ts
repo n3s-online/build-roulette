@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText, createGateway } from "ai";
+import { generateText, generateObject, createGateway } from "ai";
 import { createPerplexity } from "@ai-sdk/perplexity";
 import { z } from "zod";
 
@@ -167,65 +167,28 @@ Return ONLY valid JSON matching this exact structure:
 
     // Step 2: Parse structured JSON from the reasoning response using GPT-4o
     const parsedResult = await withRetry(async () => {
-      const response = await generateText({
+      return await generateObject({
         model: gateway("openai/gpt-4o"),
         messages: [
           {
             role: "user",
-            content: `Extract and format the 3 product ideas from the following reasoning response into the exact TypeScript-defined JSON structure. If the reasoning response contains ideas that don't perfectly match the structure, adapt them appropriately while preserving the core concepts and insights.
+            content: `Extract and format the 3 product ideas from the following reasoning response into the exact JSON structure requested. If the reasoning response contains ideas that don't perfectly match the structure, adapt them appropriately while preserving the core concepts and insights.
 
 REASONING RESPONSE:
 ${perplexityResult.text}
 
-Extract exactly 3 ideas and format them as valid JSON matching this TypeScript interface:
-
-\`\`\`typescript
-interface GeneratedIdea {
-  name: string;           
-  description: string;    
-  coreFeatures: string[]; 
-  suggestedTechStack: string[]; 
-  leadGenerationIdeas: string[]; 
-}
-
-interface IdeaGenerationResponse {
-  ideas: GeneratedIdea[]; 
-}
-\`\`\`
-
-Requirements:
+Extract exactly 3 ideas and format them with these requirements:
 - Exactly 3 ideas in the ideas array
 - Each idea must include ${combination.techStack} in suggestedTechStack
-- All arrays must be within the specified lengths (3-5 for features/tech, 3-4 for marketing)
 - Names should be catchy and memorable
 - Descriptions should be 1-2 sentences addressing ${combination.problemType} problems
 
-Return ONLY the JSON object matching the IdeaGenerationResponse interface. No explanations, no markdown code blocks, just the raw JSON:`,
+Focus on extracting actionable, feasible product ideas from the reasoning response above.`,
           },
         ],
+        schema: IdeaGenerationSchema,
         temperature: 0.1,
       });
-
-      // Parse and validate the JSON response
-      const jsonText = response.text.trim();
-      let parsedJson;
-      try {
-        parsedJson = JSON.parse(jsonText);
-      } catch (jsonError) {
-        // Try to extract JSON from potential markdown code blocks
-        const jsonMatch = jsonText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-        if (jsonMatch && jsonMatch[1]) {
-          parsedJson = JSON.parse(jsonMatch[1]);
-        } else {
-          throw new Error(
-            `Failed to parse JSON response: ${jsonText.substring(0, 200)}...`
-          );
-        }
-      }
-
-      // Validate with Zod schema
-      const validatedResult = IdeaGenerationSchema.parse(parsedJson);
-      return { object: validatedResult };
     });
 
     return NextResponse.json({
