@@ -95,16 +95,16 @@ This is crucial - all ideas must be appropriately scoped for a ${combination.pro
 - 3 Month Project: Complex application with advanced features, integrations, scalability considerations
 - 6 Month Journey: Enterprise-grade solution with comprehensive features, testing, documentation, deployment
 
-TASK: Research current pain points and trends for ${combination.userType} in ${combination.market} in 2025, then generate ideas that address these problems.
+TASK: Research current trends and challenges for ${combination.userType} in ${combination.market} who need ${combination.problemType} solutions in 2025, then generate ideas that address these specific problems.
 
 Requirements for each idea:
 - Name: Catchy, memorable product name
-- Description: 1-2 sentences addressing researched problems AND appropriate for the ${combination.projectScope.toLowerCase()} timeline
+- Description: 1-2 sentences addressing ${combination.problemType} problems for ${combination.userType} in ${combination.market} AND appropriate for the ${combination.projectScope.toLowerCase()} timeline
 - Core Features: 3-5 specific features scoped appropriately for ${combination.projectScope.toLowerCase()}
 - Tech Stack: 3-5 technologies (must include ${combination.techStack}) suitable for the project scope
 - Marketing: 3-4 lead generation strategies realistic for an indie developer in this timeframe
 
-Make ideas unique, feasible for solo developers, properly scoped for ${combination.projectScope.toLowerCase()}, based on real 2025 market research.
+Make ideas unique, feasible for solo developers, properly scoped for ${combination.projectScope.toLowerCase()}, based on real 2025 market research about ${combination.problemType} challenges for ${combination.userType} in ${combination.market}.
 
 Return ONLY valid JSON matching this exact structure:
 {
@@ -171,7 +171,7 @@ Return ONLY valid JSON matching this exact structure:
           messages: [
             {
               role: "user",
-              content: `Generate exactly 3 product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
+              content: `Generate exactly 3 product ideas for ${combination.userType} in ${combination.market} that solve ${combination.problemType} problems using ${combination.techStack}.
 
 Return ONLY valid JSON in this exact format (no extra text, no markdown, no explanations):
 {
