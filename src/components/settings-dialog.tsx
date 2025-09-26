@@ -29,7 +29,7 @@ import {
   type DimensionSettings,
   type PerplexityModel
 } from "@/lib/utils";
-import { soundManager, playSound } from "@/lib/sounds";
+import { soundManager } from "@/lib/sounds";
 
 interface SettingsDialogProps {
   onApiKeyChange?: (hasKey: boolean) => void;
@@ -53,7 +53,7 @@ export default function SettingsDialog({
   const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(DEFAULT_DIMENSION_SETTINGS);
   const [selectedModel, setSelectedModel] = useState<PerplexityModel>("sonar-reasoning-pro");
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [soundVolume, setSoundVolume] = useState(30);
+  const [soundVolume, setSoundVolume] = useState(15);
 
   useEffect(() => {
     const storedKey = getStoredApiKey();
@@ -96,7 +96,6 @@ export default function SettingsDialog({
       storeApiKey(apiKey.trim());
       setHasStoredKey(true);
       onApiKeyChange?.(true);
-      playSound.success();
       if (onOpenChange) {
         onOpenChange(false);
       } else {
@@ -143,7 +142,7 @@ export default function SettingsDialog({
     setSoundEnabled(newEnabled);
     soundManager.toggle();
     if (newEnabled) {
-      playSound.click();
+      soundManager.testSound();
     }
   };
 
@@ -196,7 +195,6 @@ export default function SettingsDialog({
           variant="outline"
           size="icon"
           className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300"
-          onClick={() => playSound.settingsOpen()}
         >
           <Settings size={16} />
         </Button>
@@ -544,13 +542,9 @@ export default function SettingsDialog({
             {/* Sound Effects Preview */}
             <div className="space-y-3 pt-4 border-t border-gray-700">
               <Label className="text-gray-300 font-medium">Sound Effects Include:</Label>
-              <div className="grid grid-cols-2 gap-2 text-sm text-gray-400">
-                <div>🎰 Slot machine spinning</div>
-                <div>🔔 Reel stopping clicks</div>
-                <div>✨ Generate ideas chime</div>
-                <div>🎵 Success notifications</div>
-                <div>👆 Button hover sounds</div>
-                <div>⚙️ Settings open/close</div>
+              <div className="flex flex-col gap-2 text-sm text-gray-400">
+                <div>🔔 Beep when each slot machine column lands</div>
+                <div>🎵 Success sound when AI results arrive</div>
               </div>
               <p className="text-xs text-gray-500 mt-3">
                 Sounds respect your system&apos;s reduced motion preferences and can be disabled at any time.

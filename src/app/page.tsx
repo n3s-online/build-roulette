@@ -30,7 +30,6 @@ export default function Home() {
 
     if (!apiKey) {
       setShowSettingsDialog(true);
-      playSound.error();
       return;
     }
 
@@ -41,7 +40,6 @@ export default function Home() {
           playSound.success();
         },
         onError: (error) => {
-          playSound.error();
           // If it's an API key error, show settings dialog
           if (error?.code === "INVALID_API_KEY") {
             setShowSettingsDialog(true);

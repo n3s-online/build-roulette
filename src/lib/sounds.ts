@@ -10,7 +10,7 @@ interface SoundSettings {
 
 class SoundManager {
   private audioContext: AudioContext | null = null;
-  private settings: SoundSettings = { enabled: true, volume: 0.3 };
+  private settings: SoundSettings = { enabled: true, volume: 0.15 };
   private isInitialized = false;
 
   constructor() {
@@ -80,98 +80,13 @@ class SoundManager {
   }
 
   // Sound Effects
-  async clickSound(): Promise<void> {
-    await this.initializeAudio();
-    await this.playTone(800, 0.1, 0.5, 'square');
-  }
-
-  async hoverSound(): Promise<void> {
-    await this.initializeAudio();
-    await this.playTone(1000, 0.05, 0.3, 'sine');
-  }
-
-  async spinStartSound(): Promise<void> {
-    await this.initializeAudio();
-    // Ascending tone for spin start
-    if (!this.audioContext) return;
-
-    const startTime = this.audioContext.currentTime;
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
-
-    oscillator.frequency.setValueAtTime(200, startTime);
-    oscillator.frequency.linearRampToValueAtTime(400, startTime + 0.3);
-    oscillator.type = 'sawtooth';
-
-    const volume = this.settings.volume * 0.4;
-    gainNode.gain.setValueAtTime(volume, startTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
-
-    oscillator.start(startTime);
-    oscillator.stop(startTime + 0.3);
-  }
 
   async reelStopSound(): Promise<void> {
     await this.initializeAudio();
-    await this.playTone(600, 0.15, 0.6, 'square');
+    await this.playTone(600, 0.15, 0.3, 'square');
   }
 
-  async allReelsStoppedSound(): Promise<void> {
-    await this.initializeAudio();
-    // Victory chime - two tone harmony
-    if (!this.audioContext) return;
-
-    const startTime = this.audioContext.currentTime;
-    const playChord = (freq1: number, freq2: number) => {
-      [freq1, freq2].forEach(freq => {
-        const oscillator = this.audioContext!.createOscillator();
-        const gainNode = this.audioContext!.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext!.destination);
-
-        oscillator.frequency.setValueAtTime(freq, startTime);
-        oscillator.type = 'sine';
-
-        const volume = this.settings.volume * 0.3;
-        gainNode.gain.setValueAtTime(volume, startTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
-
-        oscillator.start(startTime);
-        oscillator.stop(startTime + 0.8);
-      });
-    };
-
-    playChord(523, 659); // C5 and E5 - pleasant major third
-  }
-
-  async generateIdeasSound(): Promise<void> {
-    await this.initializeAudio();
-    // Magical swoosh sound
-    if (!this.audioContext) return;
-
-    const startTime = this.audioContext.currentTime;
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
-
-    oscillator.frequency.setValueAtTime(1200, startTime);
-    oscillator.frequency.exponentialRampToValueAtTime(300, startTime + 0.4);
-    oscillator.type = 'sine';
-
-    const volume = this.settings.volume * 0.5;
-    gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
-
-    oscillator.start(startTime);
-    oscillator.stop(startTime + 0.4);
-  }
+  // Removed allReelsStoppedSound - no longer needed
 
   async successSound(): Promise<void> {
     await this.initializeAudio();
@@ -181,27 +96,13 @@ class SoundManager {
       setTimeout(() => {
         const note = notes[i];
         if (note) {
-          this.playTone(note, 0.2, 0.4, 'sine');
+          this.playTone(note, 0.2, 0.2, 'sine');
         }
       }, i * 100);
     }
   }
 
-  async errorSound(): Promise<void> {
-    await this.initializeAudio();
-    // Gentle error sound - not harsh
-    await this.playTone(300, 0.3, 0.5, 'triangle');
-  }
-
-  async settingsOpenSound(): Promise<void> {
-    await this.initializeAudio();
-    await this.playTone(700, 0.1, 0.4, 'sine');
-  }
-
-  async settingsCloseSound(): Promise<void> {
-    await this.initializeAudio();
-    await this.playTone(500, 0.1, 0.4, 'sine');
-  }
+  // Removed error and settings sounds - keeping it simple
 
   // Settings Management
   toggle(): void {
@@ -224,7 +125,7 @@ class SoundManager {
 
   // Test sound for settings
   async testSound(): Promise<void> {
-    await this.clickSound();
+    await this.reelStopSound();
   }
 }
 
@@ -233,14 +134,6 @@ export const soundManager = new SoundManager();
 
 // Convenience functions
 export const playSound = {
-  click: () => soundManager.clickSound(),
-  hover: () => soundManager.hoverSound(),
-  spinStart: () => soundManager.spinStartSound(),
   reelStop: () => soundManager.reelStopSound(),
-  allReelsStopped: () => soundManager.allReelsStoppedSound(),
-  generateIdeas: () => soundManager.generateIdeasSound(),
   success: () => soundManager.successSound(),
-  error: () => soundManager.errorSound(),
-  settingsOpen: () => soundManager.settingsOpenSound(),
-  settingsClose: () => soundManager.settingsCloseSound(),
 };
