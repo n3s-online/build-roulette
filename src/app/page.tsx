@@ -10,6 +10,7 @@ import FakeLoadingBar from "@/components/fake-loading-bar";
 import { Combination } from "@/lib/types";
 import { useGenerateIdeas } from "@/hooks/use-generate-ideas";
 import { getStoredApiKey, type DimensionSettings, DEFAULT_DIMENSION_SETTINGS, type PerplexityModel } from "@/lib/utils";
+import { playSound } from "@/lib/sounds";
 
 export default function Home() {
   const [currentCombination, setCurrentCombination] = useState<Combination | null>(null);
@@ -29,13 +30,18 @@ export default function Home() {
 
     if (!apiKey) {
       setShowSettingsDialog(true);
+      playSound.error();
       return;
     }
 
     generateIdeasMutation.mutate(
       { combination, apiKey, model: selectedModel },
       {
+        onSuccess: () => {
+          playSound.success();
+        },
         onError: (error) => {
+          playSound.error();
           // If it's an API key error, show settings dialog
           if (error?.code === "INVALID_API_KEY") {
             setShowSettingsDialog(true);

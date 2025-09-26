@@ -5,6 +5,7 @@ import { Lightbulb } from "lucide-react";
 import SlotMachineReels from "./slot-machine-reels";
 import ProjectScopeSelector from "./project-scope-slider";
 import CombinationResults from "./combination-results";
+import { playSound } from "@/lib/sounds";
 
 // Re-export types from lib for consistency
 export type {
@@ -51,6 +52,7 @@ export default function SlotMachine({
 
     setIsSpinning(true);
     setResult(null);
+    playSound.spinStart();
 
     // Generate result first
     const newResult = generateRandomResult();
@@ -91,11 +93,19 @@ export default function SlotMachine({
     setColumnPositions(targetPositions);
     setColumnDurations(durations);
 
+    // Play individual reel stop sounds
+    durations.forEach((duration) => {
+      setTimeout(() => {
+        playSound.reelStop();
+      }, duration);
+    });
+
     // Show result after longest animation completes
     const longestDuration = Math.max(...durations);
     setTimeout(() => {
       setResult(newResult);
       setIsSpinning(false);
+      playSound.allReelsStopped();
       onResult?.(newResult);
     }, longestDuration + 500);
   }, [isSpinning, generateRandomResult, onResult, dimensionSettings]);
@@ -147,7 +157,10 @@ export default function SlotMachine({
       {result && !isSpinning && (
         <div className="max-w-lg w-full mx-auto">
           <button
-            onClick={() => onGenerateIdeas?.({ ...result, projectScope })}
+            onClick={() => {
+              playSound.generateIdeas();
+              onGenerateIdeas?.({ ...result, projectScope });
+            }}
             className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 text-white font-bold text-lg rounded-xl transition-all duration-300 shadow-xl hover:shadow-emerald-500/30 hover:scale-105 border border-emerald-400/20"
           >
             <Lightbulb size={22} className="animate-pulse" />

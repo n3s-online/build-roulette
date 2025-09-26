@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Eye, EyeOff, Briefcase, Users, Target, Zap } from "lucide-react";
+import { Settings, Eye, EyeOff, Briefcase, Users, Target, Zap, Volume2, VolumeX } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,7 @@ import {
   type DimensionSettings,
   type PerplexityModel
 } from "@/lib/utils";
+import { soundManager, playSound } from "@/lib/sounds";
 
 interface SettingsDialogProps {
   onApiKeyChange?: (hasKey: boolean) => void;
@@ -51,6 +52,8 @@ export default function SettingsDialog({
   const [hasStoredKey, setHasStoredKey] = useState(false);
   const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(DEFAULT_DIMENSION_SETTINGS);
   const [selectedModel, setSelectedModel] = useState<PerplexityModel>("sonar-reasoning-pro");
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundVolume, setSoundVolume] = useState(30);
 
   useEffect(() => {
     const storedKey = getStoredApiKey();
@@ -69,6 +72,10 @@ export default function SettingsDialog({
     const storedModel = getStoredModel();
     setSelectedModel(storedModel);
     onModelChange?.(storedModel);
+
+    // Load sound settings
+    setSoundEnabled(soundManager.isEnabled());
+    setSoundVolume(Math.round(soundManager.getVolume() * 100));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Intentionally exclude callbacks to prevent infinite loops on mount
 
@@ -89,6 +96,7 @@ export default function SettingsDialog({
       storeApiKey(apiKey.trim());
       setHasStoredKey(true);
       onApiKeyChange?.(true);
+      playSound.success();
       if (onOpenChange) {
         onOpenChange(false);
       } else {
@@ -130,6 +138,27 @@ export default function SettingsDialog({
     onModelChange?.(model);
   };
 
+  const handleSoundToggle = () => {
+    const newEnabled = !soundEnabled;
+    setSoundEnabled(newEnabled);
+    soundManager.toggle();
+    if (newEnabled) {
+      playSound.click();
+    }
+  };
+
+  const handleVolumeChange = (values: number[]) => {
+    const volume = values[0];
+    if (volume !== undefined) {
+      setSoundVolume(volume);
+      soundManager.setVolume(volume / 100);
+    }
+  };
+
+  const handleTestSound = () => {
+    soundManager.testSound();
+  };
+
   const handleDimensionToggle = (dimension: keyof DimensionSettings, value: string) => {
     setDimensionSettings(prev => {
       const currentArray = prev[dimension] as string[];
@@ -167,6 +196,7 @@ export default function SettingsDialog({
           variant="outline"
           size="icon"
           className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300"
+          onClick={() => playSound.settingsOpen()}
         >
           <Settings size={16} />
         </Button>
@@ -179,9 +209,10 @@ export default function SettingsDialog({
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="api" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-700 border border-gray-600">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-700 border border-gray-600">
             <TabsTrigger value="api" className="text-gray-300 data-[state=active]:bg-gray-600 data-[state=active]:text-white">API Key</TabsTrigger>
             <TabsTrigger value="dimensions" className="text-gray-300 data-[state=active]:bg-gray-600 data-[state=active]:text-white">Slot Options</TabsTrigger>
+            <TabsTrigger value="sounds" className="text-gray-300 data-[state=active]:bg-gray-600 data-[state=active]:text-white">Sounds</TabsTrigger>
           </TabsList>
 
           <TabsContent value="api" className="space-y-4 mt-4">
@@ -439,6 +470,92 @@ export default function SettingsDialog({
                 </div>
               </div>
             </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="sounds" className="space-y-6 mt-4">
+            <div className="text-sm text-gray-400 mb-4">
+              Configure audio feedback for interactions. Sound effects provide subtle feedback to enhance the user experience.
+            </div>
+
+            {/* Sound Enable/Disable */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {soundEnabled ? (
+                  <Volume2 size={20} className="text-blue-400" />
+                ) : (
+                  <VolumeX size={20} className="text-gray-500" />
+                )}
+                <div>
+                  <Label className="text-gray-300 font-medium">Sound Effects</Label>
+                  <p className="text-sm text-gray-500">Enable audio feedback for interactions</p>
+                </div>
+              </div>
+              <Button
+                onClick={handleSoundToggle}
+                variant={soundEnabled ? "default" : "outline"}
+                size="sm"
+                className={soundEnabled
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600"
+                }
+              >
+                {soundEnabled ? "Enabled" : "Disabled"}
+              </Button>
+            </div>
+
+            {/* Volume Control */}
+            {soundEnabled && (
+              <div className="space-y-3">
+                <Label className="text-gray-300 font-medium">Volume</Label>
+                <div className="flex items-center gap-4">
+                  <VolumeX size={16} className="text-gray-500" />
+                  <div className="flex-1">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      value={soundVolume}
+                      onChange={(e) => handleVolumeChange([parseInt(e.target.value)])}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${soundVolume}%, #374151 ${soundVolume}%, #374151 100%)`
+                      }}
+                    />
+                  </div>
+                  <Volume2 size={16} className="text-gray-400" />
+                  <span className="text-sm text-gray-400 w-10 text-right">{soundVolume}%</span>
+                </div>
+
+                {/* Test Sound Button */}
+                <div className="flex justify-center pt-2">
+                  <Button
+                    onClick={handleTestSound}
+                    variant="outline"
+                    size="sm"
+                    className="bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600"
+                  >
+                    Test Sound
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Sound Effects Preview */}
+            <div className="space-y-3 pt-4 border-t border-gray-700">
+              <Label className="text-gray-300 font-medium">Sound Effects Include:</Label>
+              <div className="grid grid-cols-2 gap-2 text-sm text-gray-400">
+                <div>🎰 Slot machine spinning</div>
+                <div>🔔 Reel stopping clicks</div>
+                <div>✨ Generate ideas chime</div>
+                <div>🎵 Success notifications</div>
+                <div>👆 Button hover sounds</div>
+                <div>⚙️ Settings open/close</div>
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                Sounds respect your system&apos;s reduced motion preferences and can be disabled at any time.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
