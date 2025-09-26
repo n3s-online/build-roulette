@@ -5,7 +5,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
 // Rate limiting and retry utilities
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function withRetry<T>(
   fn: () => Promise<T>,
@@ -16,9 +16,10 @@ async function withRetry<T>(
     try {
       return await fn();
     } catch (error: unknown) {
-      const isRateLimit = (error as Error)?.message?.includes('429') ||
-                         (error as Error)?.message?.includes('rate limit') ||
-                         (error as { status?: number })?.status === 429;
+      const isRateLimit =
+        (error as Error)?.message?.includes("429") ||
+        (error as Error)?.message?.includes("rate limit") ||
+        (error as { status?: number })?.status === 429;
 
       if (!isRateLimit || attempt === maxRetries) {
         throw error;
@@ -26,11 +27,15 @@ async function withRetry<T>(
 
       // Exponential backoff with jitter
       const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
-      console.log(`Rate limited, retrying in ${Math.round(delay)}ms (attempt ${attempt}/${maxRetries})`);
+      console.log(
+        `Rate limited, retrying in ${Math.round(
+          delay
+        )}ms (attempt ${attempt}/${maxRetries})`
+      );
       await sleep(delay);
     }
   }
-  throw new Error('Max retries exceeded');
+  throw new Error("Max retries exceeded");
 }
 
 // Zod schemas for validation
@@ -71,7 +76,9 @@ const RequestSchema = z.object({
     projectScope: z.string(),
   }),
   apiKey: z.string().min(1, "API key is required"),
-  model: z.enum(["sonar-reasoning", "sonar-reasoning-pro"]).default("sonar-reasoning-pro"),
+  model: z
+    .enum(["sonar-reasoning", "sonar-reasoning-pro"])
+    .default("sonar-reasoning-pro"),
 });
 
 export async function POST(request: NextRequest) {
@@ -84,16 +91,18 @@ export async function POST(request: NextRequest) {
     // Create Perplexity client with user's API key via Vercel AI Gateway
     const perplexity = createPerplexity({
       apiKey: apiKey,
-      baseURL: 'https://ai-gateway.vercel.sh/v1',
+      baseURL: "https://ai-gateway.vercel.sh/v1",
     });
 
     // Create OpenAI client for JSON parsing
     const openai = createOpenAI({
       apiKey: apiKey,
-      baseURL: 'https://ai-gateway.vercel.sh/v1',
+      baseURL: "https://ai-gateway.vercel.sh/v1",
     });
 
-    const optimizedPrompt = `You are a product idea generator with real-time web search capabilities. Generate 3 unique, feasible product ideas for ${combination.userType} in ${combination.market} using ${combination.techStack}.
+    const optimizedPrompt = `You are a product idea generator with real-time web search capabilities. Generate 3 unique, feasible product ideas for ${
+      combination.userType
+    } in ${combination.market} using ${combination.techStack}.
 
 PROJECT SCOPE: ${combination.projectScope}
 This is crucial - all ideas must be appropriately scoped for a ${combination.projectScope.toLowerCase()}:
@@ -103,16 +112,28 @@ This is crucial - all ideas must be appropriately scoped for a ${combination.pro
 - 3 Month Project: Complex application with advanced features, integrations, scalability considerations
 - 6 Month Journey: Enterprise-grade solution with comprehensive features, testing, documentation, deployment
 
-TASK: Research current trends and challenges for ${combination.userType} in ${combination.market} who need ${combination.problemType} solutions in 2025, then generate ideas that address these specific problems.
+TASK: Research current trends and challenges for ${combination.userType} in ${
+      combination.market
+    } who need ${
+      combination.problemType
+    } solutions in 2025, then generate ideas that address these specific problems.
 
 Requirements for each idea:
 - Name: Catchy, memorable product name
-- Description: 1-2 sentences addressing ${combination.problemType} problems for ${combination.userType} in ${combination.market} AND appropriate for the ${combination.projectScope.toLowerCase()} timeline
+- Description: 1-2 sentences addressing ${
+      combination.problemType
+    } problems for ${combination.userType} in ${
+      combination.market
+    } AND appropriate for the ${combination.projectScope.toLowerCase()} timeline
 - Core Features: 3-5 specific features scoped appropriately for ${combination.projectScope.toLowerCase()}
-- Tech Stack: 3-5 technologies (must include ${combination.techStack}) suitable for the project scope
+- Tech Stack: 3-5 technologies (must include ${
+      combination.techStack
+    }) suitable for the project scope
 - Marketing: 3-4 lead generation strategies realistic for an indie developer in this timeframe
 
-Make ideas unique, feasible for solo developers, properly scoped for ${combination.projectScope.toLowerCase()}, based on real 2025 market research about ${combination.problemType} challenges for ${combination.userType} in ${combination.market}.
+Make ideas unique, feasible for solo developers, properly scoped for ${combination.projectScope.toLowerCase()}, based on real 2025 market research about ${
+      combination.problemType
+    } challenges for ${combination.userType} in ${combination.market}.
 
 Return ONLY valid JSON matching this exact structure:
 {
@@ -141,7 +162,10 @@ Return ONLY valid JSON matching this exact structure:
       });
     });
 
-    console.log("Perplexity reasoning response received:", perplexityResult.text.substring(0, 200) + "...");
+    console.log(
+      "Perplexity reasoning response received:",
+      perplexityResult.text.substring(0, 200) + "..."
+    );
 
     // Step 2: Parse structured JSON from the reasoning response using GPT-4o
     const parsedResult = await withRetry(async () => {
@@ -150,19 +174,35 @@ Return ONLY valid JSON matching this exact structure:
         messages: [
           {
             role: "user",
-            content: `Extract and format the 3 product ideas from the following reasoning response into the exact JSON structure requested. If the reasoning response contains ideas that don't perfectly match the structure, adapt them appropriately while preserving the core concepts and insights.
+            content: `Extract and format the 3 product ideas from the following reasoning response into the exact TypeScript-defined JSON structure. If the reasoning response contains ideas that don't perfectly match the structure, adapt them appropriately while preserving the core concepts and insights.
 
 REASONING RESPONSE:
 ${perplexityResult.text}
 
-Extract exactly 3 ideas and format them as valid JSON with this structure:
-- name: catchy product name
-- description: clear 1-2 sentence description
-- coreFeatures: array of 3-5 specific features
-- suggestedTechStack: array of 3-5 technologies (must include ${combination.techStack})
-- leadGenerationIdeas: array of 3-4 marketing strategies
+Extract exactly 3 ideas and format them as valid JSON matching this TypeScript interface:
 
-Return ONLY the structured JSON object, no explanations, no markdown formatting, no code blocks. Just the raw JSON:`,
+\`\`\`typescript
+interface GeneratedIdea {
+  name: string;           
+  description: string;    
+  coreFeatures: string[]; 
+  suggestedTechStack: string[]; 
+  leadGenerationIdeas: string[]; 
+}
+
+interface IdeaGenerationResponse {
+  ideas: GeneratedIdea[]; 
+}
+\`\`\`
+
+Requirements:
+- Exactly 3 ideas in the ideas array
+- Each idea must include ${combination.techStack} in suggestedTechStack
+- All arrays must be within the specified lengths (3-5 for features/tech, 3-4 for marketing)
+- Names should be catchy and memorable
+- Descriptions should be 1-2 sentences addressing ${combination.problemType} problems
+
+Return ONLY the JSON object matching the IdeaGenerationResponse interface. No explanations, no markdown code blocks, just the raw JSON:`,
           },
         ],
         temperature: 0.1,
@@ -179,7 +219,9 @@ Return ONLY the structured JSON object, no explanations, no markdown formatting,
         if (jsonMatch && jsonMatch[1]) {
           parsedJson = JSON.parse(jsonMatch[1]);
         } else {
-          throw new Error(`Failed to parse JSON response: ${jsonText.substring(0, 200)}...`);
+          throw new Error(
+            `Failed to parse JSON response: ${jsonText.substring(0, 200)}...`
+          );
         }
       }
 
