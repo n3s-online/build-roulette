@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText, generateObject } from "ai";
+import { generateText } from "ai";
 import { createPerplexity } from "@ai-sdk/perplexity";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
@@ -145,7 +145,7 @@ Return ONLY valid JSON matching this exact structure:
 
     // Step 2: Parse structured JSON from the reasoning response using GPT-4o
     const parsedResult = await withRetry(async () => {
-      return await generateObject({
+      const response = await generateText({
         model: openai("openai/gpt-4o"),
         messages: [
           {
@@ -162,12 +162,30 @@ Extract exactly 3 ideas and format them as valid JSON with this structure:
 - suggestedTechStack: array of 3-5 technologies (must include ${combination.techStack})
 - leadGenerationIdeas: array of 3-4 marketing strategies
 
-Return only the structured JSON, no explanations or markdown.`,
+Return ONLY the structured JSON object, no explanations, no markdown formatting, no code blocks. Just the raw JSON:`,
           },
         ],
-        schema: IdeaGenerationSchema,
         temperature: 0.1,
       });
+
+      // Parse and validate the JSON response
+      const jsonText = response.text.trim();
+      let parsedJson;
+      try {
+        parsedJson = JSON.parse(jsonText);
+      } catch (jsonError) {
+        // Try to extract JSON from potential markdown code blocks
+        const jsonMatch = jsonText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+        if (jsonMatch && jsonMatch[1]) {
+          parsedJson = JSON.parse(jsonMatch[1]);
+        } else {
+          throw new Error(`Failed to parse JSON response: ${jsonText.substring(0, 200)}...`);
+        }
+      }
+
+      // Validate with Zod schema
+      const validatedResult = IdeaGenerationSchema.parse(parsedJson);
+      return { object: validatedResult };
     });
 
     return NextResponse.json({
