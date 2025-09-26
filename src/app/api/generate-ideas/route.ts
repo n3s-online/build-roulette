@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText } from "ai";
+import { generateText, createGateway } from "ai";
 import { createPerplexity } from "@ai-sdk/perplexity";
-import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
 // Rate limiting and retry utilities
@@ -94,10 +93,9 @@ export async function POST(request: NextRequest) {
       baseURL: "https://ai-gateway.vercel.sh/v1",
     });
 
-    // Create OpenAI client for JSON parsing
-    const openai = createOpenAI({
+    // Create AI Gateway client for OpenAI models
+    const gateway = createGateway({
       apiKey: apiKey,
-      baseURL: "https://ai-gateway.vercel.sh/v1",
     });
 
     const optimizedPrompt = `You are a product idea generator with real-time web search capabilities. Generate 3 unique, feasible product ideas for ${
@@ -170,7 +168,7 @@ Return ONLY valid JSON matching this exact structure:
     // Step 2: Parse structured JSON from the reasoning response using GPT-4o
     const parsedResult = await withRetry(async () => {
       const response = await generateText({
-        model: openai("openai/gpt-4o"),
+        model: gateway("openai/gpt-4o"),
         messages: [
           {
             role: "user",
