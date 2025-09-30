@@ -7,16 +7,27 @@ import SlotMachine from "@/components/slot-machine";
 import SettingsDialog from "@/components/settings-dialog";
 import IdeasDisplay from "@/components/ideas-display";
 import FakeLoadingBar from "@/components/fake-loading-bar";
+import Footer from "@/components/footer";
 import { Combination } from "@/lib/types";
 import { useGenerateIdeas } from "@/hooks/use-generate-ideas";
-import { getStoredApiKey, type DimensionSettings, DEFAULT_DIMENSION_SETTINGS, type PerplexityModel } from "@/lib/utils";
+import {
+  getStoredApiKey,
+  type DimensionSettings,
+  DEFAULT_DIMENSION_SETTINGS,
+  type PerplexityModel,
+} from "@/lib/utils";
 import { playSound } from "@/lib/sounds";
 
 export default function Home() {
-  const [currentCombination, setCurrentCombination] = useState<Combination | null>(null);
+  const [currentCombination, setCurrentCombination] =
+    useState<Combination | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-  const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(DEFAULT_DIMENSION_SETTINGS);
-  const [selectedModel, setSelectedModel] = useState<PerplexityModel>("sonar-reasoning-pro");
+  const [dimensionSettings, setDimensionSettings] = useState<DimensionSettings>(
+    DEFAULT_DIMENSION_SETTINGS
+  );
+  const [selectedModel, setSelectedModel] = useState<PerplexityModel>(
+    "sonar-reasoning-pro"
+  );
 
   const generateIdeasMutation = useGenerateIdeas();
 
@@ -55,9 +66,12 @@ export default function Home() {
     }
   }, []);
 
-  const handleDimensionSettingsChange = useCallback((settings: DimensionSettings) => {
-    setDimensionSettings(settings);
-  }, []);
+  const handleDimensionSettingsChange = useCallback(
+    (settings: DimensionSettings) => {
+      setDimensionSettings(settings);
+    },
+    []
+  );
 
   const handleModelChange = useCallback((model: PerplexityModel) => {
     setSelectedModel(model);
@@ -120,7 +134,9 @@ export default function Home() {
                   <p className="text-red-400 font-medium mb-2">
                     Generation Failed
                   </p>
-                  <p className="text-red-300 text-sm mb-4">{generateIdeasMutation.error.message}</p>
+                  <p className="text-red-300 text-sm mb-4">
+                    {generateIdeasMutation.error.message}
+                  </p>
                   <button
                     onClick={() =>
                       currentCombination &&
@@ -136,14 +152,16 @@ export default function Home() {
           )}
 
           {/* Generated Ideas Display */}
-          {generateIdeasMutation.data && currentCombination && !generateIdeasMutation.isPending && (
-            <div className="mt-12">
-              <IdeasDisplay
-                ideas={generateIdeasMutation.data.ideas}
-                combination={currentCombination}
-              />
-            </div>
-          )}
+          {generateIdeasMutation.data &&
+            currentCombination &&
+            !generateIdeasMutation.isPending && (
+              <div className="mt-12">
+                <IdeasDisplay
+                  ideas={generateIdeasMutation.data.ideas}
+                  combination={currentCombination}
+                />
+              </div>
+            )}
         </div>
 
         {/* How it Works Section */}
@@ -159,7 +177,8 @@ export default function Home() {
                 </div>
                 <h4 className="font-semibold text-white mb-2">Spin</h4>
                 <p className="text-gray-400 text-sm">
-                  Generate random combinations of markets, users, and tech stacks
+                  Generate random combinations of markets, users, and tech
+                  stacks
                 </p>
               </div>
 
@@ -171,7 +190,8 @@ export default function Home() {
                 </div>
                 <h4 className="font-semibold text-white mb-2">Research</h4>
                 <p className="text-gray-400 text-sm">
-                  We search the web for real problems affecting your target market
+                  We search the web for real problems affecting your target
+                  market
                 </p>
               </div>
 
@@ -181,7 +201,9 @@ export default function Home() {
                 <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Lightbulb className="text-white" size={24} />
                 </div>
-                <h4 className="font-semibold text-white mb-2">Generate Ideas</h4>
+                <h4 className="font-semibold text-white mb-2">
+                  Generate Ideas
+                </h4>
                 <p className="text-gray-400 text-sm">
                   AI creates solutions perfectly scoped for your timeline
                 </p>
@@ -189,6 +211,9 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <Footer />
       </main>
     </div>
   );
