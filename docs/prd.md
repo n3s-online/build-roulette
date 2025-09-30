@@ -106,7 +106,7 @@ Solo entrepreneurs and indie hackers frequently face "blank page syndrome" when 
 
 #### Discovery & Initial Use
 - **As a visitor**, I want to immediately understand what the tool does so that I can decide to engage
-- **As a user**, I want satisfying animations when spinning the wheel so that the experience feels premium and shareable
+- **As a user**, I want satisfying animations when spinning the slot machine so that the experience feels premium and shareable
 
 #### Idea Generation
 - **As an indie hacker**, I want to see my combination clearly displayed so that I understand what was selected
@@ -169,11 +169,11 @@ type GeneratedIdea = {
 
 ## Implementation Timeline
 
-### Day 1: Foundation & Roulette Wheel
+### Day 1: Foundation & Slot Machine
 - **Morning (4 hours):**
   - Next.js project setup with TypeScript, Tailwind, shadcn
   - Basic page layout and responsive design
-  - Roulette wheel component creation with 4 sections
+  - Slot machine component creation with 4 sections
 - **Afternoon (4 hours):**
   - Slot machine animation implementation with staggered stopping
   - Column selection logic and accurate targeting
