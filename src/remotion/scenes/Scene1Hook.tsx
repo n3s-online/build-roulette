@@ -5,7 +5,7 @@ import {
   useVideoConfig,
   spring,
 } from "remotion";
-import { FONT_FAMILY, BACKGROUND_STYLE, BACKGROUND_GRADIENT_OVERLAY } from "../styles";
+import { FONT_FAMILY } from "../styles";
 
 export const Scene1Hook: React.FC = () => {
   const frame = useCurrentFrame();
@@ -29,9 +29,7 @@ export const Scene1Hook: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={BACKGROUND_STYLE}>
-      <div style={BACKGROUND_GRADIENT_OVERLAY} />
-
+    <AbsoluteFill>
       {/* Centered text */}
       <div
         style={{

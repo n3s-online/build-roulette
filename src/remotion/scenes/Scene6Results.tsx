@@ -7,7 +7,7 @@ import {
   interpolate,
 } from "remotion";
 import { demoIdeas } from "../data";
-import { FONT_FAMILY, BACKGROUND_STYLE, BACKGROUND_GRADIENT_OVERLAY } from "../styles";
+import { FONT_FAMILY } from "../styles";
 
 const LightbulbIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -209,9 +209,7 @@ export const Scene6Results: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ ...BACKGROUND_STYLE, padding: 40, overflow: "auto" }}>
-      <div style={BACKGROUND_GRADIENT_OVERLAY} />
-
+    <AbsoluteFill style={{ padding: 40, overflow: "auto" }}>
       <div
         style={{
           maxWidth: 1000,

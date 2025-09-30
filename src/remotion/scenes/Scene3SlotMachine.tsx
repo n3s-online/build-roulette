@@ -7,7 +7,7 @@ import {
   interpolate,
 } from "remotion";
 import { dimensionOptions, demoCombination } from "../data";
-import { FONT_FAMILY, BACKGROUND_STYLE, BACKGROUND_GRADIENT_OVERLAY } from "../styles";
+import { FONT_FAMILY } from "../styles";
 
 // Icons (simplified SVG versions)
 const BriefcaseIcon = () => (
@@ -299,9 +299,7 @@ export const Scene3SlotMachine: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ ...BACKGROUND_STYLE, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={BACKGROUND_GRADIENT_OVERLAY} />
-
+    <AbsoluteFill style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           background:

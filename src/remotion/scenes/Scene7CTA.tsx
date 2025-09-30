@@ -7,7 +7,7 @@ import {
   Img,
   staticFile,
 } from "remotion";
-import { FONT_FAMILY, BACKGROUND_STYLE, BACKGROUND_GRADIENT_OVERLAY } from "../styles";
+import { FONT_FAMILY } from "../styles";
 
 export const Scene7CTA: React.FC = () => {
   const frame = useCurrentFrame();
@@ -57,9 +57,7 @@ export const Scene7CTA: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ ...BACKGROUND_STYLE, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={BACKGROUND_GRADIENT_OVERLAY} />
-
+    <AbsoluteFill style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           textAlign: "center",

@@ -6,7 +6,7 @@ import {
   spring,
   interpolate,
 } from "remotion";
-import { FONT_FAMILY, BACKGROUND_STYLE, BACKGROUND_GRADIENT_OVERLAY } from "../styles";
+import { FONT_FAMILY } from "../styles";
 
 const SearchIcon = () => (
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -91,9 +91,7 @@ export const Scene4WebResearch: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ ...BACKGROUND_STYLE, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={BACKGROUND_GRADIENT_OVERLAY} />
-
+    <AbsoluteFill style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           textAlign: "center",
