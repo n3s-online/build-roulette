@@ -1,4 +1,4 @@
-// Re-export types from roulette-wheel for consistency
+// Re-export types from slot-machine for consistency
 export type Market =
   | "SaaS"
   | "E-commerce"

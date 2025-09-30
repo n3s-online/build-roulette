@@ -6,7 +6,7 @@
 **Target Launch:** Weekend Project (2-3 days)  
 **Primary Goal:** Build audience through viral content creation while providing value to indie hackers  
 
-A web application that generates random product combinations using a giant roulette wheel with 4 sections (Market, User Type, Problem Type, Tech Stack), then uses AI to transform these combinations into actionable product ideas for solo entrepreneurs and indie hackers.
+A web application that generates random product combinations using a 4-column slot machine interface (Market, User Type, Problem Type, Tech Stack), then uses AI to transform these combinations into actionable product ideas for solo entrepreneurs and indie hackers.
 
 ## Problem Statement
 
