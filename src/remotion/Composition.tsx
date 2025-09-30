@@ -40,7 +40,7 @@ export const DemoVideo: React.FC = () => {
 
         {/* Transition 1 -> 2: Fade */}
         <TransitionSeries.Transition
-          presentation={fade()}
+          presentation={fade({ shouldFadeOutExitingScene: true })}
           timing={springTiming({ config: { damping: 200 }, durationInFrames: transitionDuration })}
         />
 
@@ -73,7 +73,7 @@ export const DemoVideo: React.FC = () => {
 
         {/* Transition 4 -> 5: Fade */}
         <TransitionSeries.Transition
-          presentation={fade()}
+          presentation={fade({ shouldFadeOutExitingScene: true })}
           timing={springTiming({ config: { damping: 200 }, durationInFrames: transitionDuration })}
         />
 
