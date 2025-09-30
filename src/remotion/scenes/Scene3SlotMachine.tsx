@@ -77,7 +77,7 @@ const SlotColumn: React.FC<ColumnProps> = ({
   const extendedData = Array(25).fill(data).flat();
 
   // Animation timing - staggered stops
-  const startSpinFrame = 10;
+  const startSpinFrame = 30; // Start after button press
   const spinDuration = [120, 150, 180, 210]; // Different durations for each column, all finish before scene ends
   const stopFrame = startSpinFrame + spinDuration[columnIndex]!;
 
@@ -298,6 +298,32 @@ export const Scene3SlotMachine: React.FC = () => {
     },
   });
 
+  // Button animations
+  const buttonAppear = spring({
+    frame: frame - 5,
+    fps,
+    config: {
+      damping: 100,
+    },
+  });
+
+  // Button press animation (frames 15-25)
+  const buttonPressStart = 15;
+  const buttonPressEnd = 25;
+
+  const buttonPress =
+    frame < buttonPressStart ? 0
+    : frame > buttonPressEnd ? 0
+    : interpolate(
+        frame,
+        [buttonPressStart, buttonPressStart + 5, buttonPressEnd],
+        [0, 1, 0],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+      );
+
+  const buttonScale = 1 - buttonPress * 0.1; // Scale down by 10% when pressed
+  const buttonY = buttonPress * 8; // Move down 8px when pressed
+
   return (
     <AbsoluteFill style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
@@ -318,51 +344,97 @@ export const Scene3SlotMachine: React.FC = () => {
         <div
           style={{
             display: "flex",
-            gap: 48,
-            alignItems: "flex-start",
+            flexDirection: "column",
+            gap: 24,
+            alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <SlotColumn
-            data={dimensionOptions.markets}
-            targetValue={demoCombination.market}
-            color="rgb(59 130 246)"
-            label="Market"
-            icon={<BriefcaseIcon />}
-            columnIndex={0}
-            frame={frame}
-            fps={fps}
-          />
-          <SlotColumn
-            data={dimensionOptions.userTypes}
-            targetValue={demoCombination.userType}
-            color="rgb(16 185 129)"
-            label="User Type"
-            icon={<UsersIcon />}
-            columnIndex={1}
-            frame={frame}
-            fps={fps}
-          />
-          <SlotColumn
-            data={dimensionOptions.problemTypes}
-            targetValue={demoCombination.problemType}
-            color="rgb(245 158 11)"
-            label="Problem"
-            icon={<TargetIcon />}
-            columnIndex={2}
-            frame={frame}
-            fps={fps}
-          />
-          <SlotColumn
-            data={dimensionOptions.techStacks}
-            targetValue={demoCombination.techStack}
-            color="rgb(139 92 246)"
-            label="Tech Stack"
-            icon={<ZapIcon />}
-            columnIndex={3}
-            frame={frame}
-            fps={fps}
-          />
+          <div
+            style={{
+              display: "flex",
+              gap: 48,
+              alignItems: "flex-start",
+              justifyContent: "center",
+            }}
+          >
+            <SlotColumn
+              data={dimensionOptions.markets}
+              targetValue={demoCombination.market}
+              color="rgb(59 130 246)"
+              label="Market"
+              icon={<BriefcaseIcon />}
+              columnIndex={0}
+              frame={frame}
+              fps={fps}
+            />
+            <SlotColumn
+              data={dimensionOptions.userTypes}
+              targetValue={demoCombination.userType}
+              color="rgb(16 185 129)"
+              label="User Type"
+              icon={<UsersIcon />}
+              columnIndex={1}
+              frame={frame}
+              fps={fps}
+            />
+            <SlotColumn
+              data={dimensionOptions.problemTypes}
+              targetValue={demoCombination.problemType}
+              color="rgb(245 158 11)"
+              label="Problem"
+              icon={<TargetIcon />}
+              columnIndex={2}
+              frame={frame}
+              fps={fps}
+            />
+            <SlotColumn
+              data={dimensionOptions.techStacks}
+              targetValue={demoCombination.techStack}
+              color="rgb(139 92 246)"
+              label="Tech Stack"
+              icon={<ZapIcon />}
+              columnIndex={3}
+              frame={frame}
+              fps={fps}
+            />
+          </div>
+
+          {/* Spin Button */}
+          <div
+            style={{
+              opacity: buttonAppear,
+              transform: `scale(${buttonScale}) translateY(${buttonY}px)`,
+              cursor: "pointer",
+            }}
+          >
+            <div
+              style={{
+                background: "linear-gradient(to bottom, #fbbf24, #f59e0b)",
+                padding: "16px 48px",
+                borderRadius: 12,
+                boxShadow: buttonPress > 0.5
+                  ? "0 2px 8px rgba(251, 191, 36, 0.4)"
+                  : "0 4px 16px rgba(251, 191, 36, 0.6)",
+                border: "2px solid #fcd34d",
+                transition: "box-shadow 0.1s ease",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 24,
+                  fontWeight: "bold",
+                  color: "white",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontFamily: FONT_FAMILY,
+                  textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                }}
+              >
+                🎰 SPIN
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </AbsoluteFill>

@@ -16,7 +16,7 @@ export const DemoVideo: React.FC = () => {
   // Scene timings (in frames at 30fps)
   const scene1Duration = 90; // 3 seconds - Hook
   const scene2Duration = 60; // 2 seconds - Intro
-  const scene3Duration = 240; // 8 seconds - Slot Machine (the star)
+  const scene3Duration = 260; // ~8.7 seconds - Slot Machine with button press (the star)
   const scene4Duration = 90; // 3 seconds - Web Research
   const scene5Duration = 60; // 2 seconds - AI Generation
   const scene6Duration = 210; // 7 seconds - Results
