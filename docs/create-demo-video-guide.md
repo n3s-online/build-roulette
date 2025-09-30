@@ -13,7 +13,7 @@ Before starting any implementation, gather context by asking these questions:
    - Example: "This is for BuildRoulette, an AI-powered tool that generates product ideas"
 
 2. **What are the key features to highlight?**
-   - Ask user to list 2-4 main features or screens
+   - Ask user to list the main features/screens to showcase
    - Example: "The slot machine interface, web research, AI generation, and the results display"
 
 3. **Are there specific components we should use?**
@@ -25,11 +25,7 @@ Before starting any implementation, gather context by asking these questions:
    - Recommend 30-60 seconds for landing pages
    - Default: ~25 seconds if not specified
 
-5. **Do you have a logo/brand assets?**
-   - Check for logo location (usually `/public/icon.png` or `/public/logo.png`)
-   - Check for brand colors in the app
-
-6. **What's the primary URL or CTA?**
+5. **What's the primary URL or CTA?**
    - Get the production URL for the final scene
    - Example: "build.willness.dev"
 
@@ -56,12 +52,13 @@ Before starting any implementation, gather context by asking these questions:
    - Check for background colors/gradients
    - Note the font family being used
    - Identify brand colors
+   - Identifty the logo we should use
 
 ### Create a Scene Plan
 
-Based on your research, create a 5-7 scene structure:
+Based on your research, create a scene structure:
 
-**Recommended Structure:**
+**Example Structure:**
 1. **Hook Scene (3-4s)** - Problem statement or attention grabber
 2. **Intro Scene (2s)** - App name and tagline
 3. **Main Feature Scene (8-10s)** - The star of the show, usually the most unique/interesting feature
