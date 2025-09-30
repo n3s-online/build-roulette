@@ -11,7 +11,7 @@ export const Scene1Hook: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Text fade in and scale animation
+  // Simple fade in and scale animation
   const textOpacity = spring({
     frame: frame - 5,
     fps,
