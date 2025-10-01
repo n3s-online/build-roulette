@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateText, generateObject, createGateway } from "ai";
 import { createPerplexity } from "@ai-sdk/perplexity";
 import { z } from "zod";
+import { notifyDiscordSuccess, notifyDiscordError } from "@/lib/discord";
+import type { Combination } from "@/lib/types";
 
 // Rate limiting and retry utilities
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -81,11 +83,15 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  let combination: z.infer<typeof RequestSchema>["combination"] | undefined;
+
   try {
     const body = await request.json();
 
     // Validate request body
-    const { combination, apiKey, model } = RequestSchema.parse(body);
+    const parsed = RequestSchema.parse(body);
+    combination = parsed.combination;
+    const { apiKey, model } = parsed;
 
     // Create Perplexity client with user's API key via Vercel AI Gateway
     const perplexity = createPerplexity({
@@ -191,12 +197,22 @@ Focus on extracting actionable, feasible product ideas from the reasoning respon
       });
     });
 
+    // Send success notification to Discord
+    await notifyDiscordSuccess(combination);
+
     return NextResponse.json({
       ideas: parsedResult.object.ideas,
       combination,
     });
   } catch (error) {
     console.error("API Route Error:", error);
+
+    // Send error notification to Discord with combination if available
+    if (combination) {
+      await notifyDiscordError(error, combination as Combination);
+    } else {
+      await notifyDiscordError(error);
+    }
 
     // Handle validation errors
     if (error instanceof z.ZodError) {
