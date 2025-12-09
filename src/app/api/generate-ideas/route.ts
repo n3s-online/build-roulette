@@ -200,7 +200,7 @@ Focus on extracting actionable, feasible product ideas from the reasoning respon
     });
 
     // Send success notification to Discord
-    await notifyDiscordSuccess(combination);
+    await notifyDiscordSuccess(combination as Combination);
 
     return NextResponse.json({
       ideas: parsedResult.object.ideas,
