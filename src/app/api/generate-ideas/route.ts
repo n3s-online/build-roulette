@@ -92,6 +92,8 @@ export async function POST(request: NextRequest) {
     const parsed = RequestSchema.parse(body);
     combination = parsed.combination;
     const { apiKey, model } = parsed;
+    // Create local const for type safety in callbacks
+    const combo = combination;
 
     // Create Perplexity client with user's API key via Vercel AI Gateway
     const perplexity = createPerplexity({
@@ -185,9 +187,9 @@ ${perplexityResult.text}
 
 Extract exactly 3 ideas and format them with these requirements:
 - Exactly 3 ideas in the ideas array
-- Each idea must include ${combination.techStack} in suggestedTechStack
+- Each idea must include ${combo.techStack} in suggestedTechStack
 - Names should be catchy and memorable
-- Descriptions should be 1-2 sentences addressing ${combination.problemType} problems
+- Descriptions should be 1-2 sentences addressing ${combo.problemType} problems
 
 Focus on extracting actionable, feasible product ideas from the reasoning response above.`,
           },
